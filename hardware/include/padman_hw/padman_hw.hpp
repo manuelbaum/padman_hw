@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef ROS2_CONTROL_DEMO_EXAMPLE_1__RRBOT_HPP_
-#define ROS2_CONTROL_DEMO_EXAMPLE_1__RRBOT_HPP_
+#ifndef PADMAN_HW_HPP_
+#define PADMAN_HW_HPP_
 
 #include <memory>
 #include <string>
@@ -27,12 +27,12 @@
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 #include "rclcpp_lifecycle/state.hpp"
 
-namespace ros2_control_demo_example_1
+namespace padman_hw
 {
-class RRBotSystemPositionOnlyHardware : public hardware_interface::SystemInterface
+class PadmanSystemPositionOnlyHardware : public hardware_interface::SystemInterface
 {
 public:
-  RCLCPP_SHARED_PTR_DEFINITIONS(RRBotSystemPositionOnlyHardware);
+  RCLCPP_SHARED_PTR_DEFINITIONS(PadmanSystemPositionOnlyHardware);
 
   hardware_interface::CallbackReturn on_init(
     const hardware_interface::HardwareInfo & info) override;

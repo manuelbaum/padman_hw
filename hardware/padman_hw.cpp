@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "ros2_control_demo_example_1/rrbot.hpp"
+#include "padman_hw/padman_hw.hpp"
 
 #include <chrono>
 #include <cmath>
@@ -26,9 +26,9 @@
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "rclcpp/rclcpp.hpp"
 
-namespace ros2_control_demo_example_1
+namespace padman_hw
 {
-hardware_interface::CallbackReturn RRBotSystemPositionOnlyHardware::on_init(
+hardware_interface::CallbackReturn PadmanSystemPositionOnlyHardware::on_init(
   const hardware_interface::HardwareInfo & info)
 {
   if (
@@ -84,7 +84,7 @@ hardware_interface::CallbackReturn RRBotSystemPositionOnlyHardware::on_init(
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
-hardware_interface::CallbackReturn RRBotSystemPositionOnlyHardware::on_configure(
+hardware_interface::CallbackReturn PadmanSystemPositionOnlyHardware::on_configure(
   const rclcpp_lifecycle::State & /*previous_state*/)
 {
   // BEGIN: This part here is for exemplary purposes - Please do not copy to your production code
@@ -111,7 +111,7 @@ hardware_interface::CallbackReturn RRBotSystemPositionOnlyHardware::on_configure
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
-hardware_interface::CallbackReturn RRBotSystemPositionOnlyHardware::on_activate(
+hardware_interface::CallbackReturn PadmanSystemPositionOnlyHardware::on_activate(
   const rclcpp_lifecycle::State & /*previous_state*/)
 {
   // BEGIN: This part here is for exemplary purposes - Please do not copy to your production code
@@ -135,7 +135,7 @@ hardware_interface::CallbackReturn RRBotSystemPositionOnlyHardware::on_activate(
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
-hardware_interface::CallbackReturn RRBotSystemPositionOnlyHardware::on_deactivate(
+hardware_interface::CallbackReturn PadmanSystemPositionOnlyHardware::on_deactivate(
   const rclcpp_lifecycle::State & /*previous_state*/)
 {
   // BEGIN: This part here is for exemplary purposes - Please do not copy to your production code
@@ -153,7 +153,7 @@ hardware_interface::CallbackReturn RRBotSystemPositionOnlyHardware::on_deactivat
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
-hardware_interface::return_type RRBotSystemPositionOnlyHardware::read(
+hardware_interface::return_type PadmanSystemPositionOnlyHardware::read(
   const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
 {
   // BEGIN: This part here is for exemplary purposes - Please do not copy to your production code
@@ -174,7 +174,7 @@ hardware_interface::return_type RRBotSystemPositionOnlyHardware::read(
   return hardware_interface::return_type::OK;
 }
 
-hardware_interface::return_type RRBotSystemPositionOnlyHardware::write(
+hardware_interface::return_type PadmanSystemPositionOnlyHardware::write(
   const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
 {
   // BEGIN: This part here is for exemplary purposes - Please do not copy to your production code
@@ -198,4 +198,4 @@ hardware_interface::return_type RRBotSystemPositionOnlyHardware::write(
 #include "pluginlib/class_list_macros.hpp"
 
 PLUGINLIB_EXPORT_CLASS(
-  ros2_control_demo_example_1::RRBotSystemPositionOnlyHardware, hardware_interface::SystemInterface)
+  padman_hw::PadmanSystemPositionOnlyHardware, hardware_interface::SystemInterface)
