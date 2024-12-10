@@ -1,0 +1,9 @@
+<library path="padman_hw">
+  <class name="padman_hw/PadmanSystemPositionOnlyHardware"
+         type="padman_hw::PadmanSystemPositionOnlyHardware"
+         base_class_type="hardware_interface::SystemInterface">
+    <description>
+      The ros2_control RRbot example using a system hardware interface-type.
+    </description>
+  </class>
+</library>
