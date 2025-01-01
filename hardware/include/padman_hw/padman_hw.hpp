@@ -18,6 +18,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <thread>
 
 #include "hardware_interface/handle.hpp"
 #include "hardware_interface/hardware_info.hpp"
@@ -27,12 +28,18 @@
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 #include "rclcpp_lifecycle/state.hpp"
 
+#include "ros2_socketcan/socket_can_common.hpp"
+#include "ros2_socketcan/socket_can_receiver.hpp"
+#include "ros2_socketcan/socket_can_sender.hpp"
+
 namespace padman_hw
 {
 class PadmanSystemPositionOnlyHardware : public hardware_interface::SystemInterface
 {
 public:
   RCLCPP_SHARED_PTR_DEFINITIONS(PadmanSystemPositionOnlyHardware);
+
+  PadmanSystemPositionOnlyHardware();
 
   hardware_interface::CallbackReturn on_init(
     const hardware_interface::HardwareInfo & info) override;
@@ -52,11 +59,30 @@ public:
   hardware_interface::return_type write(
     const rclcpp::Time & time, const rclcpp::Duration & period) override;
 
+  void can_receive();
+
+protected:
+  hardware_interface::CallbackReturn canbus_init();
+  hardware_interface::CallbackReturn canbus_reset_joints();
+  hardware_interface::CallbackReturn canbus_init_joint_foc(int id);
+  hardware_interface::CallbackReturn canbus_init_jointlimits(int id);
+
 private:
+  
   // Parameters for the RRBot simulation
   double hw_start_sec_;
   double hw_stop_sec_;
   double hw_slowdown_;
+
+  // canbus
+  std::string can_interface_;
+  std::unique_ptr<drivers::socketcan::SocketCanReceiver> can_receiver_;
+  std::unique_ptr<drivers::socketcan::SocketCanSender> can_sender_;
+  std::unique_ptr<std::thread> can_receiver_thread_;
+  std::chrono::nanoseconds can_interval_ns_;
+  std::chrono::nanoseconds can_timeout_ns_;
+  bool can_enable_fd_;
+  bool can_use_bus_time_;
 };
 
 }  // namespace ros2_control_demo_example_1

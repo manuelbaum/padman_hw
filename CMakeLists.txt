@@ -12,6 +12,7 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   pluginlib
   rclcpp
   rclcpp_lifecycle
+  ros2_socketcan
 )
 
 # Specify the required version of ros2_control
@@ -29,8 +30,7 @@ foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
   find_package(${Dependency} REQUIRED)
 endforeach()
 
-
-
+# find_package(sockcanpp REQUIRED)
 
 ## COMPILE
 add_library(
@@ -47,6 +47,10 @@ ament_target_dependencies(
   padman_hw PUBLIC
   ${THIS_PACKAGE_INCLUDE_DEPENDS}
 )
+# ament_target_dependencies(padman_hw PUBLIC sockcanpp)
+# target_link_libraries(padman_hw PUBLIC sockcanpp)
+
+
 
 # Export hardware plugins
 pluginlib_export_plugin_description_file(hardware_interface padman_hw.xml)
