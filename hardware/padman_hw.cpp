@@ -141,35 +141,35 @@ hardware_interface::CallbackReturn PadmanSystemPositionOnlyHardware::on_init(
 
   canbus_init();
 
-  //canbus_reset_joints();
+  canbus_reset_joints();
 
-  // canbus_init_joint_foc(0);
-  // canbus_init_joint_foc(1);
-  // canbus_init_joint_foc(2);
+  canbus_init_joint_foc(0);
+  canbus_init_joint_foc(1);
+  canbus_init_joint_foc(2);
 
-  // for (int i = 0; i < 5; i++)
-  // {
-  //   rclcpp::sleep_for(std::chrono::seconds(1));
-  //   RCLCPP_INFO(get_logger(), "%.1f seconds left...", hw_start_sec_ - i);
-  // }
+  for (int i = 0; i < 5; i++)
+  {
+    rclcpp::sleep_for(std::chrono::seconds(1));
+    RCLCPP_INFO(get_logger(), "%.1f seconds left...", hw_start_sec_ - i);
+  }
 
-  // canbus_init_jointlimits(0);
-  // rclcpp::sleep_for(std::chrono::milliseconds(10));
-  // canbus_init_jointlimits(2);
+  canbus_init_jointlimits(0);
+  rclcpp::sleep_for(std::chrono::milliseconds(10));
+  canbus_init_jointlimits(2);
 
-  // for (int i = 0; i < 10; i++)
-  // {
-  //   rclcpp::sleep_for(std::chrono::seconds(1));
-  //   RCLCPP_INFO(get_logger(), "%.1f seconds left...", hw_start_sec_ - i);
-  // }
+  for (int i = 0; i < 10; i++)
+  {
+    rclcpp::sleep_for(std::chrono::seconds(1));
+    RCLCPP_INFO(get_logger(), "%.1f seconds left...", hw_start_sec_ - i);
+  }
 
-  // canbus_init_jointlimits(1);
+  canbus_init_jointlimits(1);
 
-  // for (int i = 0; i < 10; i++)
-  // {
-  //   rclcpp::sleep_for(std::chrono::seconds(1));
-  //   RCLCPP_INFO(get_logger(), "%.1f seconds left...", hw_start_sec_ - i);
-  // }
+  for (int i = 0; i < 10; i++)
+  {
+    rclcpp::sleep_for(std::chrono::seconds(1));
+    RCLCPP_INFO(get_logger(), "%.1f seconds left...", hw_start_sec_ - i);
+  }
 
   return hardware_interface::CallbackReturn::SUCCESS;
 }

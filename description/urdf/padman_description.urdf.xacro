@@ -1,4 +1,4 @@
-<?xml version="1.0"?>
+<?xml version="1.0" ?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
 <xacro:macro name="padman" params="parent prefix *origin">
@@ -14,57 +14,35 @@
 </material>
 
 <link name="base_link">
- <inertial>
-    <origin xyz="-0.04457739440820321 0.024730723933902896 -4.1288254305593605e-06" rpy="0 0 0"/>
-    <mass value="0.6868164549052078"/>
-    <inertia ixx="0.00036758611551120703" iyy="0.0008740314594154538" izz="0.000639369155366143" ixy="0.00010127478099521007" iyz="-7.555673250524018e-08" ixz="1.4328247463185807e-07"/>
-  </inertial>
-  <visual>
-    <origin xyz="0 0 0" rpy="0 0 0"/>
-    <geometry>
-      <mesh filename="file://$(find padman_hw)/urdf/meshes/base_link.stl" scale="0.001 0.001 0.001"/>
-    </geometry>
-    <material name="silver"/>
-    <material/>
-  </visual>
-  <collision>
-    <origin xyz="0 0 0" rpy="0 0 0"/>
-    <geometry>
-      <mesh filename="file://$(find padman_hw)/urdf/meshes/base_link.stl" scale="0.001 0.001 0.001"/>
-    </geometry>
-  </collision>
-</link>
-
-<link name="link01">
   <inertial>
-    <origin xyz="-0.003122242096446945 0.05271614109402629 -0.0053568216124808875" rpy="0 0 0"/>
-    <mass value="1.5574162139522874"/>
-    <inertia ixx="0.0032430973638031563" iyy="0.0017954730554939477" izz="0.0028874130602442247" ixy="0.00042804737349850554" iyz="0.0007521262970578687" ixz="-0.0003107042684086183"/>
+    <origin xyz="-0.0445773944082032 0.02473072393390289 -4.128825430559362e-06" rpy="0 0 0"/>
+    <mass value="0.6868164549052079"/>
+    <inertia ixx="0.0003675861155112072" iyy="0.000874031459415454" izz="0.0006393691553661428" ixy="0.00010127478099521061" iyz="-7.555673250524021e-08" ixz="1.4328247463185812e-07"/>
   </inertial>
   <visual>
-    <origin xyz="0.05375 -0.036 -0.0" rpy="0 0 0"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
     <geometry>
-      <mesh filename="file://$(find padman_hw)/urdf/meshes/link01.stl" scale="0.001 0.001 0.001"/>
+      <mesh filename="file://$(find padman_hw)/urdf/meshes/base_link.stl" scale="0.001 0.001 0.001"/>
     </geometry>
     <material name="silver"/>
     <material/>
   </visual>
   <collision>
-    <origin xyz="0.05375 -0.036 -0.0" rpy="0 0 0"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
     <geometry>
-      <mesh filename="file://$(find padman_hw)/urdf/meshes/link01.stl" scale="0.001 0.001 0.001"/>
+      <mesh filename="file://$(find padman_hw)/urdf/meshes/base_link.stl" scale="0.001 0.001 0.001"/>
     </geometry>
   </collision>
 </link>
 
 <link name="link11">
   <inertial>
-    <origin xyz="-0.016623361744467505 0.022906844537292956 0.0053850601512566015" rpy="0 0 0"/>
-    <mass value="0.6848943201158626"/>
-    <inertia ixx="0.0012923195184194707" iyy="0.000690546657359634" izz="0.0015098948527291073" ixy="0.00043949993027482363" iyz="-0.00035478658259228187" ixz="0.00029190584775955685"/>
+    <origin xyz="-0.00924411413412337 0.027048403424114867 -0.009339305887933608" rpy="0 0 0"/>
+    <mass value="0.6848943201158819"/>
+    <inertia ixx="0.0013939100621001288" iyy="0.0004144948312260156" izz="0.001708755879647042" ixy="0.0003356022671298737" iyz="0.00017050402620067458" ixz="-4.781817679678493e-05"/>
   </inertial>
   <visual>
-    <origin xyz="0.075694 -0.124937 0.038007" rpy="0 0 0"/>
+    <origin xyz="0.05375 -0.124937 0.043887" rpy="0 0 0"/>
     <geometry>
       <mesh filename="file://$(find padman_hw)/urdf/meshes/link11.stl" scale="0.001 0.001 0.001"/>
     </geometry>
@@ -72,7 +50,7 @@
     <material/>
   </visual>
   <collision>
-    <origin xyz="0.075694 -0.124937 0.038007" rpy="0 0 0"/>
+    <origin xyz="0.05375 -0.124937 0.043887" rpy="0 0 0"/>
     <geometry>
       <mesh filename="file://$(find padman_hw)/urdf/meshes/link11.stl" scale="0.001 0.001 0.001"/>
     </geometry>
@@ -81,12 +59,12 @@
 
 <link name="link22">
   <inertial>
-    <origin xyz="-0.02026158364764384 0.01657829596492208 0.014663267526525695" rpy="0 0 0"/>
-    <mass value="0.06355160747290721"/>
-    <inertia ixx="2.2004040111415872e-05" iyy="3.027041322525609e-05" izz="3.7183955599772583e-05" ixy="1.6300605263691505e-05" iyz="-9.328175318188152e-06" ixz="1.2930495082165232e-05"/>
+    <origin xyz="-3.979861766034709e-06 0.029895466296833845 -0.002568242362725473" rpy="0 0 0"/>
+    <mass value="0.0635516074729072"/>
+    <inertia ixx="4.278516702536754e-05" iyy="2.086127958728242e-06" izz="4.4587113952348004e-05" ixy="5.5577472342187295e-09" iyz="-1.2959951984411328e-07" ixz="1.769753484384684e-11"/>
   </inertial>
   <visual>
-    <origin xyz="0.112613 -0.208146 -0.008974" rpy="0 0 0"/>
+    <origin xyz="0.081005 -0.221152 0.082114" rpy="0 0 0"/>
     <geometry>
       <mesh filename="file://$(find padman_hw)/urdf/meshes/link22.stl" scale="0.001 0.001 0.001"/>
     </geometry>
@@ -94,63 +72,170 @@
     <material/>
   </visual>
   <collision>
-    <origin xyz="0.112613 -0.208146 -0.008974" rpy="0 0 0"/>
+    <origin xyz="0.081005 -0.221152 0.082114" rpy="0 0 0"/>
     <geometry>
       <mesh filename="file://$(find padman_hw)/urdf/meshes/link22.stl" scale="0.001 0.001 0.001"/>
     </geometry>
   </collision>
 </link>
 
-<joint name="joint1" type="continuous">
-  <origin xyz="-0.05375 0.036 0.0" rpy="0 0 0"/>
-  <parent link="base_link"/>
-  <child link="link01"/>
-  <axis xyz="0.0 -1.0 0.0"/>
-</joint>
-<transmission name="joint1_tran">
-  <type>transmission_interface/SimpleTransmission</type>
-  <joint name="joint1">
-    <hardwareInterface>PositionJointInterface</hardwareInterface>
-  </joint>
-  <actuator name="joint1_actr">
-    <hardwareInterface>PositionJointInterface</hardwareInterface>
-    <mechanicalReduction>1</mechanicalReduction>
-  </actuator>
-</transmission>
+<link name="link01">
+  <inertial>
+    <origin xyz="-2.5504578554526314e-05 0.052716154960416366 -0.006200258497213355" rpy="0 0 0"/>
+    <mass value="1.557417461604787"/>
+    <inertia ixx="0.0034232529176621354" iyy="0.0017954704957747203" izz="0.0027072568417210244" ixy="-5.362958937300301e-06" iyz="0.0008653850612075521" ixz="-1.334863366371855e-06"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.05375 -0.036 -0.0" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find padman_hw)/urdf/meshes/link01.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+    <material/>
+  </visual>
+  <collision>
+    <origin xyz="0.05375 -0.036 -0.0" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find padman_hw)/urdf/meshes/link01.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="ee1">
+  <inertial>
+    <origin xyz="0.068058 -0.24335 -0.066126" rpy="0 0 0"/>
+    <mass value="0.0"/>
+    <inertia ixx="0.0" iyy="0.0" izz="0.0" ixy="0.0" iyz="0.0" ixz="0.0"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.068058 -0.24335 -0.066126" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find padman_hw)/urdf/meshes/ee1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+    <material/>
+  </visual>
+  <collision>
+    <origin xyz="0.068058 -0.24335 -0.066126" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find padman_hw)/urdf/meshes/ee1.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="link11gb4106_padman_v71">
+  <inertial>
+    <origin xyz="-1.8180410901014188e-05 3.527030868313852e-05 -0.015557279970201461" rpy="0 0 0"/>
+    <mass value="0.1050227832534516"/>
+    <inertia ixx="2.0143933463656442e-05" iyy="2.0102012945655973e-05" izz="2.958357413317559e-05" ixy="2.912641167943271e-08" iyz="-3.325715240850256e-08" ixz="1.70405238657809e-08"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.081005 -0.221152 0.054887" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find padman_hw)/urdf/meshes/link11gb4106_padman_v71.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+    <material/>
+  </visual>
+  <collision>
+    <origin xyz="0.081005 -0.221152 0.054887" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find padman_hw)/urdf/meshes/link11gb4106_padman_v71.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
+
+<link name="link01gb2">
+  <inertial>
+    <origin xyz="-4.128825434851491e-06 -0.009172208795921968 -0.030230754350487693" rpy="0 0 0"/>
+    <mass value="0.6868164549052078"/>
+    <inertia ixx="0.0006393691553661755" iyy="0.0003675861155112057" izz="0.0008740314594154388" ixy="-1.43282474615071e-07" iyz="0.000101274780995217" ixz="7.55567325081731e-08"/>
+  </inertial>
+  <visual>
+    <origin xyz="0.05375 -0.124937 0.002387" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find padman_hw)/urdf/meshes/link01gb2.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+    <material name="silver"/>
+    <material/>
+  </visual>
+  <collision>
+    <origin xyz="0.05375 -0.124937 0.002387" rpy="0 0 0"/>
+    <geometry>
+      <mesh filename="file://$(find padman_hw)/urdf/meshes/link01gb2.stl" scale="0.001 0.001 0.001"/>
+    </geometry>
+  </collision>
+</link>
 
 <joint name="joint2" type="continuous">
-  <origin xyz="-0.021944 0.088937 -0.038007" rpy="0 0 0"/>
-  <parent link="link01"/>
+  <origin xyz="0.0 0.0 -0.0415" rpy="0 0 0"/>
+  <parent link="link01gb2"/>
   <child link="link11"/>
-  <axis xyz="0.5 -0.0 0.866025"/>
+  <axis xyz="0.0 -0.0 1.0"/>
 </joint>
-<transmission name="joint2_tran">
+<transmission name="Revolute_4_tran">
   <type>transmission_interface/SimpleTransmission</type>
-  <joint name="joint2">
+  <joint name="Revolute_4">
     <hardwareInterface>PositionJointInterface</hardwareInterface>
   </joint>
-  <actuator name="joint2_actr">
+  <actuator name="Revolute_4_actr">
     <hardwareInterface>PositionJointInterface</hardwareInterface>
     <mechanicalReduction>1</mechanicalReduction>
   </actuator>
 </transmission>
 
 <joint name="joint3" type="continuous">
-  <origin xyz="-0.036919 0.083209 0.046981" rpy="0 0 0"/>
-  <parent link="link11"/>
+  <origin xyz="0.0 0.0 -0.027227" rpy="0 0 0"/>
+  <parent link="link11gb4106_padman_v71"/>
   <child link="link22"/>
-  <axis xyz="-0.5 -0.0 -0.866025"/>
+  <axis xyz="-0.0 0.0 1.0"/>
 </joint>
-<transmission name="joint3_tran">
+<transmission name="Revolute_5_tran">
   <type>transmission_interface/SimpleTransmission</type>
-  <joint name="joint3">
+  <joint name="Revolute_5">
     <hardwareInterface>PositionJointInterface</hardwareInterface>
   </joint>
-  <actuator name="joint3_actr">
+  <actuator name="Revolute_5_actr">
     <hardwareInterface>PositionJointInterface</hardwareInterface>
     <mechanicalReduction>1</mechanicalReduction>
   </actuator>
 </transmission>
+
+<joint name="joint1" type="revolute">
+  <origin xyz="-0.05375 0.036 0.0" rpy="0 0 0"/>
+  <parent link="base_link"/>
+  <child link="link01"/>
+  <axis xyz="0.0 1.0 0.0"/>
+  <limit upper="1.047198" lower="-2.094395" effort="100" velocity="100"/>
+</joint>
+<transmission name="Revolute_9_tran">
+  <type>transmission_interface/SimpleTransmission</type>
+  <joint name="Revolute_9">
+    <hardwareInterface>PositionJointInterface</hardwareInterface>
+  </joint>
+  <actuator name="Revolute_9_actr">
+    <hardwareInterface>PositionJointInterface</hardwareInterface>
+    <mechanicalReduction>1</mechanicalReduction>
+  </actuator>
+</transmission>
+
+<joint name="Rigid_10" type="fixed">
+  <origin xyz="0.012947 0.022198 0.14824" rpy="0 0 0"/>
+  <parent link="link22"/>
+  <child link="ee1"/>
+</joint>
+
+<joint name="link11_Rigid 1" type="fixed">
+  <origin xyz="-0.027255 0.096215 -0.011" rpy="0 0 0"/>
+  <parent link="link11"/>
+  <child link="link11gb4106_padman_v71"/>
+</joint>
+
+<joint name="link01_Rigid 1" type="fixed">
+  <origin xyz="0.0 0.088937 -0.002387" rpy="0 0 0"/>
+  <parent link="link01"/>
+  <child link="link01gb2"/>
+</joint>
 
 </xacro:macro>
 
