@@ -19,6 +19,8 @@
 #include <string>
 #include <vector>
 #include <thread>
+#include <chrono>
+#include <Eigen/Dense>
 
 #include "hardware_interface/handle.hpp"
 #include "hardware_interface/hardware_info.hpp"
@@ -34,6 +36,40 @@
 
 namespace padman_hw
 {
+
+enum MSG_IDS_REL{
+    CMD = 0,
+    STATE = 1,
+    TARGET_TORQUE = 2,
+    TARGET_POSITION = 3,
+    STATE_POSITION = 4,
+    STATE_VELOCITY = 5,
+    STATE_EFFORT = 6};
+
+enum CMD_IDS{
+    REQ_STATUS=1,
+    INIT_FOC=2,
+    FIND_JOINTLIMITS=3,
+    CMD_CTRL_TORQUE=4,
+    CMD_CTRL_POSITION=5,
+    REBOOT=6
+};
+
+enum STATES{
+    UNINITIALIZED=0,
+    INITIALIZED_FOC=1,
+    FIND_LIMIT_LOWER=2,
+    FIND_LIMIT_UPPER=3,
+    INITIALIZED_JOINT=4,
+    CTRL_TORQUE=5,
+    CTRL_POSITION=6
+};
+
+const int ID_RANGE = 100;
+
+using TimePoint = std::chrono::system_clock::time_point;
+using MatrixTimePoint = Eigen::Matrix<TimePoint, Eigen::Dynamic, Eigen::Dynamic>;
+
 class PadmanSystemPositionOnlyHardware : public hardware_interface::SystemInterface
 {
 public:
@@ -63,9 +99,11 @@ public:
 
 protected:
   hardware_interface::CallbackReturn canbus_init();
+  hardware_interface::return_type request_and_wait_jointstate();
   hardware_interface::CallbackReturn canbus_reset_joints();
   hardware_interface::CallbackReturn canbus_init_joint_foc(int id);
   hardware_interface::CallbackReturn canbus_init_jointlimits(int id);
+  hardware_interface::CallbackReturn canbus_activate_positionctrl(int id);
 
 private:
   
@@ -83,6 +121,9 @@ private:
   std::chrono::nanoseconds can_timeout_ns_;
   bool can_enable_fd_;
   bool can_use_bus_time_;
+
+  MatrixTimePoint msg_timestamps; // first dimension joint, second dimension message type
+  std::vector<STATES> joint_state;
 };
 
 }  // namespace ros2_control_demo_example_1

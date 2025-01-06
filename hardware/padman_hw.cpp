@@ -22,6 +22,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <chrono>
 // Missing header for ioctl
 
 
@@ -44,34 +45,8 @@
 #include "lifecycle_msgs/msg/state.hpp"
 
 
-enum MSG_IDS_REL{
-    CMD = 0,
-    STATE = 1,
-    TARGET_TORQUE = 2,
-    TARGET_POSITION = 3,
-    STATE_POSITION = 4,
-    STATE_VELOCITY = 5,
-    STATE_EFFORT = 6};
 
-enum CMD_IDS{
-    REQ_STATUS=1,
-    INIT_FOC=2,
-    FIND_JOINTLIMITS=3,
-    CMD_CTRL_TORQUE=4,
-    CMD_CTRL_POSITION=5,
-    REBOOT=6
-};
-
-enum STATES{
-    UNINITIALIZED=0,
-    INITIALIZED_FOC=1,
-    FIND_LIMIT_LOWER=2,
-    FIND_LIMIT_UPPER=3,
-    INITIALIZED_JOINT=4,
-    CTRL_TORQUE=5,
-    CTRL_POSITION=6
-};
-
+using namespace std::chrono;
 
 namespace padman_hw
 {
@@ -96,6 +71,10 @@ hardware_interface::CallbackReturn PadmanSystemPositionOnlyHardware::on_init(
     return hardware_interface::CallbackReturn::ERROR;
   }
 
+  msg_timestamps = MatrixTimePoint(3, MSG_IDS_REL::STATE_EFFORT+1); // magic numbers to be removed: n_joints x n_messages per joint. set all to -1 as uninitialized
+  joint_state =  std::vector<STATES>(3, STATES::UNINITIALIZED);
+    // Initialize all elements to default-constructed time_point
+  msg_timestamps.setConstant(TimePoint{});
   // BEGIN: This part here is for exemplary purposes - Please do not copy to your production code
   hw_start_sec_ = stod(info_.hardware_parameters["example_param_hw_start_duration_sec"]);
   hw_stop_sec_ = stod(info_.hardware_parameters["example_param_hw_stop_duration_sec"]);
@@ -139,37 +118,7 @@ hardware_interface::CallbackReturn PadmanSystemPositionOnlyHardware::on_init(
     }
   }
 
-  canbus_init();
-
-  canbus_reset_joints();
-
-  canbus_init_joint_foc(0);
-  canbus_init_joint_foc(1);
-  canbus_init_joint_foc(2);
-
-  for (int i = 0; i < 5; i++)
-  {
-    rclcpp::sleep_for(std::chrono::seconds(1));
-    RCLCPP_INFO(get_logger(), "%.1f seconds left...", hw_start_sec_ - i);
-  }
-
-  canbus_init_jointlimits(0);
-  rclcpp::sleep_for(std::chrono::milliseconds(10));
-  canbus_init_jointlimits(2);
-
-  for (int i = 0; i < 10; i++)
-  {
-    rclcpp::sleep_for(std::chrono::seconds(1));
-    RCLCPP_INFO(get_logger(), "%.1f seconds left...", hw_start_sec_ - i);
-  }
-
-  canbus_init_jointlimits(1);
-
-  for (int i = 0; i < 10; i++)
-  {
-    rclcpp::sleep_for(std::chrono::seconds(1));
-    RCLCPP_INFO(get_logger(), "%.1f seconds left...", hw_start_sec_ - i);
-  }
+  
 
   return hardware_interface::CallbackReturn::SUCCESS;
 }
@@ -178,7 +127,8 @@ hardware_interface::CallbackReturn PadmanSystemPositionOnlyHardware::on_init(
 
 
 hardware_interface::CallbackReturn PadmanSystemPositionOnlyHardware::canbus_init(){
-
+RCLCPP_DEBUG(this->get_logger(), "------------------------------- canbus_init.");
+RCLCPP_INFO(this->get_logger(), "------------------------------- canbus_init.");
   // Create CAN sender
 
     try {
@@ -306,11 +256,11 @@ hardware_interface::CallbackReturn PadmanSystemPositionOnlyHardware::canbus_rese
 hardware_interface::CallbackReturn PadmanSystemPositionOnlyHardware::canbus_init_joint_foc(int id){
   //   // python:
   //   //    data = [np.uint8(CMD_IDS.INIT_FOC)]#[0x00, 0x00]
-  //   //    message = can.Message(arbitration_id=MSG_IDS_REL.CMD+(self.id+1)*self.id_range, is_extended_id=False, data=data)
+  //   //    message = can.Message(arbitration_id=MSG_IDS_REL.CMD+(self.id+1)*ID_RANGE, is_extended_id=False, data=data)
   
 
-    int id_range=100;
-    int can_id = MSG_IDS_REL::CMD+(id+1)*id_range;
+
+    int can_id = MSG_IDS_REL::CMD+(id+1)*ID_RANGE;
     drivers::socketcan::FrameType type = drivers::socketcan::FrameType::DATA;// also possible: FrameType::REMOTE;FrameType::ERROR;
     drivers::socketcan::CanId send_id(can_id, 0, type, drivers::socketcan::StandardFrame);
     size_t dlc = 1;
@@ -355,12 +305,12 @@ hardware_interface::CallbackReturn PadmanSystemPositionOnlyHardware::canbus_init
 
   //   // python:
   //       // data = [np.uint8(CMD_IDS.FIND_JOINTLIMITS)]#[0x00, 0x00]
-  //       // message = can.Message(arbitration_id=MSG_IDS_REL.CMD+(self.id+1)*self.id_range, is_extended_id=False, data=data)
+  //       // message = can.Message(arbitration_id=MSG_IDS_REL.CMD+(self.id+1)*ID_RANGE, is_extended_id=False, data=data)
   //       // self.bus.send(message, timeout=0.2)
 
 
-    int id_range=100;
-    int can_id = MSG_IDS_REL::CMD+(id+1)*id_range;
+
+    int can_id = MSG_IDS_REL::CMD+(id+1)*ID_RANGE;
     drivers::socketcan::FrameType type = drivers::socketcan::FrameType::DATA;// also possible: FrameType::REMOTE;FrameType::ERROR;
     drivers::socketcan::CanId send_id(can_id, 0, type, drivers::socketcan::StandardFrame);
     size_t dlc = 1;
@@ -378,7 +328,7 @@ hardware_interface::CallbackReturn PadmanSystemPositionOnlyHardware::canbus_init
 
 
   //   int id_range=100;
-  //   int can_id = MSG_IDS_REL::CMD+(id+1)*id_range;
+  //   int can_id = MSG_IDS_REL::CMD+(id+1)*ID_RANGE;
   //   RCLCPP_INFO(get_logger(), "Initializing FOC for joint %i", id);
   //   // Set up a CAN frame to send
   //   struct can_frame frame;
@@ -412,12 +362,12 @@ hardware_interface::CallbackReturn PadmanSystemPositionOnlyHardware::on_configur
   // BEGIN: This part here is for exemplary purposes - Please do not copy to your production code
   RCLCPP_INFO(get_logger(), "Configuring ...please wait...");
 
-  for (int i = 0; i < hw_start_sec_; i++)
-  {
-    rclcpp::sleep_for(std::chrono::seconds(1));
-    RCLCPP_INFO(get_logger(), "%.1f seconds left...", hw_start_sec_ - i);
-  }
-  // END: This part here is for exemplary purposes - Please do not copy to your production code
+  // for (int i = 0; i < hw_start_sec_; i++)
+  // {
+  //   rclcpp::sleep_for(std::chrono::seconds(1));
+  //   RCLCPP_INFO(get_logger(), "%.1f seconds left...", hw_start_sec_ - i);
+  // }
+  // // END: This part here is for exemplary purposes - Please do not copy to your production code
 
   // reset values always when configuring hardware
   for (const auto & [name, descr] : joint_state_interfaces_)
@@ -428,6 +378,13 @@ hardware_interface::CallbackReturn PadmanSystemPositionOnlyHardware::on_configur
   {
     set_command(name, 0.0);
   }
+
+
+
+canbus_init();
+
+
+
   RCLCPP_INFO(get_logger(), "Successfully configured!");
 
   return hardware_interface::CallbackReturn::SUCCESS;
@@ -450,6 +407,59 @@ hardware_interface::CallbackReturn PadmanSystemPositionOnlyHardware::on_activate
   for (const auto & [name, descr] : joint_state_interfaces_)
   {
     set_command(name, get_state(name));
+  }
+
+
+
+rclcpp::sleep_for(std::chrono::seconds(1));
+  canbus_reset_joints();
+rclcpp::sleep_for(std::chrono::seconds(1));
+  std::this_thread::sleep_for(std::chrono::milliseconds(500));
+  request_and_wait_jointstate();
+
+
+  // see if the joints have been initialized before, and if yes, then skip finding joint limits
+  bool is_need_initialization = false;
+  for(int i_joint=0; i_joint<3; i_joint++){
+    is_need_initialization = is_need_initialization || joint_state[i_joint]<STATES::INITIALIZED_JOINT;
+  }
+
+  if(is_need_initialization){
+
+  
+  
+  canbus_init_joint_foc(0);
+  std::this_thread::sleep_for(std::chrono::milliseconds(10));
+  canbus_init_joint_foc(1);
+  std::this_thread::sleep_for(std::chrono::milliseconds(10));
+  canbus_init_joint_foc(2);
+  std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+  for (int i = 0; i < 5; i++)
+  {
+    rclcpp::sleep_for(std::chrono::seconds(1));
+    RCLCPP_INFO(get_logger(), "%.1f seconds left...", hw_start_sec_ - i);
+  }
+
+  canbus_init_jointlimits(0);
+  rclcpp::sleep_for(std::chrono::milliseconds(10));
+  canbus_init_jointlimits(2);
+
+  for (int i = 0; i < 10; i++)
+  {
+    rclcpp::sleep_for(std::chrono::seconds(1));
+    RCLCPP_INFO(get_logger(), "%.1f seconds left...", hw_start_sec_ - i);
+  }
+
+  canbus_init_jointlimits(1);
+
+  for (int i = 0; i < 10; i++)
+  {
+    rclcpp::sleep_for(std::chrono::seconds(1));
+    RCLCPP_INFO(get_logger(), "%.1f seconds left...", hw_start_sec_ - i);
+  }
+  } else{
+    RCLCPP_INFO(get_logger(), "Skipping initialization!");
   }
 
   RCLCPP_INFO(get_logger(), "Successfully activated!");
@@ -525,21 +535,69 @@ hardware_interface::return_type PadmanSystemPositionOnlyHardware::read(
   return hardware_interface::return_type::OK;
 }
 
+hardware_interface::return_type PadmanSystemPositionOnlyHardware::request_and_wait_jointstate(){
+  for(int i_joint=0; i_joint<3; i_joint++){
+    RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "LOOPING %d",i_joint);
+    std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
+    std::chrono::duration<float> t_since_last = now - msg_timestamps(i_joint, MSG_IDS_REL::STATE);
+    std::stringstream ss;
+    ss << "Time since last STATUS for joint "<<i_joint<<":"<<t_since_last.count();
+    RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "%s", ss.str().c_str());
+
+    int can_id = (i_joint+1)*ID_RANGE + MSG_IDS_REL::CMD;
+    drivers::socketcan::FrameType type = drivers::socketcan::FrameType::DATA;// also possible: FrameType::REMOTE;FrameType::ERROR;
+    drivers::socketcan::CanId send_id(can_id, 0, type, drivers::socketcan::StandardFrame);
+    size_t dlc = 1;
+    uint8_t data[1] = {CMD_IDS::REQ_STATUS};
+    RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "SENDING");
+    try {
+      can_sender_->send(data, dlc, send_id, can_timeout_ns_);
+    } catch (const std::exception & ex) {
+      RCLCPP_WARN_THROTTLE(
+        this->get_logger(), *this->get_clock(), 1000,
+        "Error sending CAN message: %s - %s",
+        can_interface_.c_str(), ex.what());
+      return hardware_interface::return_type::ERROR;
+    }
+    RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "SENT");
+
+    while(std::chrono::system_clock::now() - msg_timestamps(i_joint, MSG_IDS_REL::STATE) > std::chrono::seconds(1) && rclcpp::ok()){
+      RCLCPP_WARN_THROTTLE(
+        this->get_logger(), *this->get_clock(), 1000,
+        "Waiting for joint state");
+
+    now = std::chrono::system_clock::now();
+        // Convert time_point to time_t (Unix timestamp)
+    std::time_t now_time_t = std::chrono::system_clock::to_time_t(now);
+    std::time_t msg_time_t = std::chrono::system_clock::to_time_t(msg_timestamps(i_joint, MSG_IDS_REL::STATE));
+    ss << "Time since last STATUS for joint \t"<<i_joint<<":"<<(std::chrono::system_clock::now() - msg_timestamps(i_joint, MSG_IDS_REL::STATE)).count()<<
+          " now: \t"<< std::ctime(&now_time_t) << 
+          "timestamp:\t"<<std::ctime(&msg_time_t);
+    RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 1000, "%s", ss.str().c_str());
+    rclcpp::sleep_for(std::chrono::seconds(1));
+    }
+  RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "Received Jointstate");
+
+  }
+  RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "LOOP END");
+  return hardware_interface::return_type::OK;
+}
+
 hardware_interface::return_type PadmanSystemPositionOnlyHardware::write(
   const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
 {
-  // BEGIN: This part here is for exemplary purposes - Please do not copy to your production code
-  std::stringstream ss;
-  ss << "Writing commands:";
+  // // BEGIN: This part here is for exemplary purposes - Please do not copy to your production code
+  // std::stringstream ss;
+  // ss << "Writing commands:";
 
-  for (const auto & [name, descr] : joint_command_interfaces_)
-  {
-    // Simulate sending commands to the hardware
-    ss << std::fixed << std::setprecision(2) << std::endl
-       << "\t" << get_command(name) << " for joint '" << name << "'";
-  }
-  RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "%s", ss.str().c_str());
-  // END: This part here is for exemplary purposes - Please do not copy to your production code
+  // for (const auto & [name, descr] : joint_command_interfaces_)
+  // {
+  //   // Simulate sending commands to the hardware
+  //   ss << std::fixed << std::setprecision(2) << std::endl
+  //      << "\t" << get_command(name) << " for joint '" << name << "'";
+  // }
+  // RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "%s", ss.str().c_str());
+  // // END: This part here is for exemplary purposes - Please do not copy to your production code
 
   return hardware_interface::return_type::OK;
 }
@@ -552,13 +610,13 @@ void PadmanSystemPositionOnlyHardware::can_receive()
   // if (!enable_fd_) {
 
     while (rclcpp::ok()) {
-
-      if (get_lifecycle_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE) {
-        //std::this_thread::sleep_for(100ms); //chrono literal in cpp14
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+      // RCLCPP_INFO(get_logger(), "LOOP CANBUS MSG");
+      // if (get_lifecycle_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE) {
+      //   //std::this_thread::sleep_for(100ms); //chrono literal in cpp14
+      //   std::this_thread::sleep_for(std::chrono::milliseconds(10));
         
-        continue;
-      }
+      //   continue;
+      // }
       unsigned int data_buffer;
       try {
         
@@ -574,41 +632,49 @@ void PadmanSystemPositionOnlyHardware::can_receive()
       }
 
       // switch over message types:
-      int i_joint = receive_id.identifier() / 100 -1 ;
-      int i_cmd = receive_id.identifier() % 100;
+      int i_joint = receive_id.identifier() / ID_RANGE -1 ;
+      int i_cmd = receive_id.identifier() % ID_RANGE;
 
+      //RCLCPP_INFO(get_logger(), "RECEIVED CANBUS MSG");
+
+      switch(i_cmd){
+        case MSG_IDS_REL::STATE_POSITION:
+          if(i_joint >=0){
+            std::string name = "joint"+std::to_string(i_joint+1)+"/position";
+            float new_value;
+
+
+            // Copy the bit pattern of `int` to `float`
+            std::memcpy(&new_value, &data_buffer, sizeof(new_value));
+
+            // std::stringstream ss;
+            // ss << "Reading states:";
+            // ss << std::fixed << std::setprecision(2) << std::endl
+            //       << "\t" << new_value << " for joint '" << name << "'";
+            
+            // RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "%s", ss.str().c_str());
+
+
+            //RCLCPP_INFO(get_logger(), (std::string("TRYING TO SET: \t")+name+std::string(" to: ")+std::string(std::to_string((double)new_value))).c_str());
+            set_state(name, (double)new_value);
+            //RCLCPP_INFO(get_logger(), (std::string("Successfully SET it:\t")+name+std::string(" to: ")+std::string(std::to_string((double)new_value))).c_str());
+
+
+        }
+        break;
+
+      case MSG_IDS_REL::STATE:
+        // RCLCPP_INFO(get_logger(), "RECEIVED STATE MSG");
+        
+        joint_state[i_joint]=padman_hw::STATES(data_buffer);
+
+      }
       // did we receive the position of a real joint (i.e. not our pseudo joint request)
-      if(i_cmd == MSG_IDS_REL::STATE_POSITION && i_joint >=0){
-          std::string name = "joint"+std::to_string(i_joint+1)+"/position";
-          float new_value;
-
-
-          // Copy the bit pattern of `int` to `float`
-          std::memcpy(&new_value, &data_buffer, sizeof(new_value));
-
-
-
-
-
-
-          std::stringstream ss;
-          ss << "Reading states:";
-          ss << std::fixed << std::setprecision(2) << std::endl
-                << "\t" << new_value << " for joint '" << name << "'";
-          
-          RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "%s", ss.str().c_str());
-
-
-
-
-
-
-
-          RCLCPP_INFO(get_logger(), (std::string("TRYING TO SET: \t")+name+std::string(" to: ")+std::string(std::to_string((double)new_value))).c_str());
-          set_state(name, (double)new_value);
-          RCLCPP_INFO(get_logger(), (std::string("Successfully SET it:\t")+name+std::string(" to: ")+std::string(std::to_string((double)new_value))).c_str());
-
-
+      
+      if(i_joint>=0){ // we ignore messages we sent ourselves and just listen in the joint specific ranges
+        // RCLCPP_INFO(get_logger(), (std::string("TRYING TO SET msg_timestamps(")+std::to_string(i_joint)+std::string(", ")+std::to_string(i_cmd)+std::string(")")).c_str());
+        std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
+        msg_timestamps(i_joint, i_cmd)=now;
       }
 
       if (can_use_bus_time_) {

@@ -13,6 +13,8 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   rclcpp
   rclcpp_lifecycle
   ros2_socketcan
+  eigen3_cmake_module
+  Eigen3
 )
 
 # Specify the required version of ros2_control
@@ -26,6 +28,7 @@ endif()
 # find dependencies
 find_package(backward_ros REQUIRED)
 find_package(ament_cmake REQUIRED)
+find_package(Eigen3 REQUIRED)
 foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
   find_package(${Dependency} REQUIRED)
 endforeach()
@@ -47,6 +50,7 @@ ament_target_dependencies(
   padman_hw PUBLIC
   ${THIS_PACKAGE_INCLUDE_DEPENDS}
 )
+ament_target_dependencies(padman_hw Eigen3)
 # ament_target_dependencies(padman_hw PUBLIC sockcanpp)
 # target_link_libraries(padman_hw PUBLIC sockcanpp)
 
