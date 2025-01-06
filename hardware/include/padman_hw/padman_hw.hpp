@@ -103,7 +103,8 @@ protected:
   hardware_interface::CallbackReturn canbus_reset_joints();
   hardware_interface::CallbackReturn canbus_init_joint_foc(int id);
   hardware_interface::CallbackReturn canbus_init_jointlimits(int id);
-  hardware_interface::CallbackReturn canbus_activate_positionctrl(int id);
+  hardware_interface::return_type canbus_activate_positionctrl(int i_joint);
+  hardware_interface::return_type canbus_send_targetposition(int i_joint, float target);
 
 private:
   

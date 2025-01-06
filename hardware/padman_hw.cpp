@@ -462,6 +462,15 @@ rclcpp::sleep_for(std::chrono::seconds(1));
     RCLCPP_INFO(get_logger(), "Skipping initialization!");
   }
 
+  for (int i = 0; i < 3; i++)
+  {
+    
+    RCLCPP_INFO(get_logger(), "Activating Position CTRL for joint %d", i);
+    canbus_activate_positionctrl(i);
+    rclcpp::sleep_for(std::chrono::seconds(1));
+  }
+  
+
   RCLCPP_INFO(get_logger(), "Successfully activated!");
 
   return hardware_interface::CallbackReturn::SUCCESS;
@@ -549,7 +558,7 @@ hardware_interface::return_type PadmanSystemPositionOnlyHardware::request_and_wa
     drivers::socketcan::CanId send_id(can_id, 0, type, drivers::socketcan::StandardFrame);
     size_t dlc = 1;
     uint8_t data[1] = {CMD_IDS::REQ_STATUS};
-    RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "SENDING");
+    // RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "SENDING");
     try {
       can_sender_->send(data, dlc, send_id, can_timeout_ns_);
     } catch (const std::exception & ex) {
@@ -559,7 +568,7 @@ hardware_interface::return_type PadmanSystemPositionOnlyHardware::request_and_wa
         can_interface_.c_str(), ex.what());
       return hardware_interface::return_type::ERROR;
     }
-    RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "SENT");
+    // RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "SENT");
 
     while(std::chrono::system_clock::now() - msg_timestamps(i_joint, MSG_IDS_REL::STATE) > std::chrono::seconds(1) && rclcpp::ok()){
       RCLCPP_WARN_THROTTLE(
@@ -583,6 +592,28 @@ hardware_interface::return_type PadmanSystemPositionOnlyHardware::request_and_wa
   return hardware_interface::return_type::OK;
 }
 
+hardware_interface::return_type PadmanSystemPositionOnlyHardware::canbus_activate_positionctrl(int i_joint){
+  // PYTHON
+        //   data = [np.uint8(CMD_IDS.CTRL_POSITION)]#[0x00, 0x00]
+        // message = can.Message(arbitration_id=MSG_IDS_REL.CMD+(self.id+1)*self.id_range, is_extended_id=False, data=data)
+    int can_id = (i_joint+1)*ID_RANGE + MSG_IDS_REL::CMD;
+    drivers::socketcan::FrameType type = drivers::socketcan::FrameType::DATA;// also possible: FrameType::REMOTE;FrameType::ERROR;
+    drivers::socketcan::CanId send_id(can_id, 0, type, drivers::socketcan::StandardFrame);
+    size_t dlc = 1;
+    uint8_t data[1] = {CMD_IDS::CMD_CTRL_POSITION};
+    // RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "SENDING");
+    try {
+      can_sender_->send(data, dlc, send_id, can_timeout_ns_);
+    } catch (const std::exception & ex) {
+      RCLCPP_WARN_THROTTLE(
+        this->get_logger(), *this->get_clock(), 1000,
+        "Error sending CAN message: %s - %s",
+        can_interface_.c_str(), ex.what());
+      return hardware_interface::return_type::ERROR;
+    }
+  return hardware_interface::return_type::OK;
+}
+
 hardware_interface::return_type PadmanSystemPositionOnlyHardware::write(
   const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
 {
@@ -599,9 +630,48 @@ hardware_interface::return_type PadmanSystemPositionOnlyHardware::write(
   // RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "%s", ss.str().c_str());
   // // END: This part here is for exemplary purposes - Please do not copy to your production code
 
+  for (int i_joint=0; i_joint<3; i_joint++)
+  {
+    std::string name = "joint"+std::to_string(i_joint+1)+"/position";
+    float target = get_command(name);
+    canbus_send_targetposition(i_joint, target);
+  }
+
+  
+
   return hardware_interface::return_type::OK;
 }
 
+hardware_interface::return_type PadmanSystemPositionOnlyHardware::canbus_send_targetposition(int i_joint, float target){
+  // PYTHON
+        // self.target_data = [0x00, 0x00, 0x00, 0x00]
+        // self.target_msg = can.Message(arbitration_id=self.joints[0].id_range+MSG_IDS_REL.TARGET_POSITION, is_extended_id=False, data=self.target_data)
+
+        // # Start periodic CAN sender
+        // self.sender = PeriodicCANSender(bus, ids = [self.joints[i].id_range*(i+1)++MSG_IDS_REL.TARGET_POSITION for i in range(self.n_joints)], datas = [self.target_data]*self.n_joints, interval=0.01)  # 20 Hz
+RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "CREATING MSG");
+  int can_id = (i_joint+1)*ID_RANGE + MSG_IDS_REL::TARGET_POSITION;
+  drivers::socketcan::FrameType type = drivers::socketcan::FrameType::DATA;// also possible: FrameType::REMOTE;FrameType::ERROR;
+  drivers::socketcan::CanId send_id(can_id, 0, type, drivers::socketcan::StandardFrame);
+  size_t dlc = 4;
+  uint8_t data[4];
+
+  // data = reinterpret_cast<uint8_t*>(&target);
+  std::memcpy(data, reinterpret_cast<uint8_t*>(&target), sizeof(data));
+
+  RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "SENDING");
+  try {
+    can_sender_->send(data, dlc, send_id, can_timeout_ns_);
+  } catch (const std::exception & ex) {
+    RCLCPP_WARN_THROTTLE(
+      this->get_logger(), *this->get_clock(), 1000,
+      "Error sending CAN message: %s - %s",
+      can_interface_.c_str(), ex.what());
+    return hardware_interface::return_type::ERROR;
+  }
+  RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "SENT");
+  return hardware_interface::return_type::OK;
+}
 
 void PadmanSystemPositionOnlyHardware::can_receive()
 {
