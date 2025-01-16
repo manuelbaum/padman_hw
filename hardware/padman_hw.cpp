@@ -76,13 +76,15 @@ namespace padman_hw
     hw_slowdown_ = stod(info_.hardware_parameters["example_param_hw_slowdown"]);
     // END: This part here is for exemplary purposes - Please do not copy to your production code
 
+    control_level_.resize(info_.joints.size(), integration_level_t::POSITION);
+
     for (const hardware_interface::ComponentInfo &joint : info_.joints)
     {
       // RRBotSystemPositionOnly has exactly one state and command interface on each joint
-      if (joint.command_interfaces.size() != 1)
+      if (joint.command_interfaces.size() != 2)
       {
         RCLCPP_FATAL(
-            get_logger(), "Joint '%s' has %zu command interfaces found. 1 expected.",
+            get_logger(), "Joint '%s' has %zu command interfaces found. 2 expected.",
             joint.name.c_str(), joint.command_interfaces.size());
         return hardware_interface::CallbackReturn::ERROR;
       }
@@ -365,11 +367,109 @@ namespace padman_hw
     return hardware_interface::CallbackReturn::SUCCESS;
   }
 
+
+
+
+
+  hardware_interface::return_type PadmanSystemPositionOnlyHardware::prepare_command_mode_switch(
+    const std::vector<std::string> & start_interfaces,
+    const std::vector<std::string> & stop_interfaces)
+  {
+    // Prepare for new command modes
+    RCLCPP_INFO(get_logger(), "Prepare for new command modes");
+    std::vector<integration_level_t> new_modes = {};
+    for (std::string key : start_interfaces)
+    {
+      for (std::size_t i = 0; i < info_.joints.size(); i++)
+      {
+        if (key == info_.joints[i].name + "/" + hardware_interface::HW_IF_POSITION)
+        {
+          new_modes.push_back(integration_level_t::POSITION);
+        }
+        if (key == info_.joints[i].name + "/" + hardware_interface::HW_IF_VELOCITY)
+        {
+          new_modes.push_back(integration_level_t::VELOCITY);
+        }
+        if (key == info_.joints[i].name + "/" + hardware_interface::HW_IF_EFFORT)
+        {
+          new_modes.push_back(integration_level_t::EFFORT);
+        }
+      }
+    }
+    // Example criteria: All joints must be given new command mode at the same time
+    RCLCPP_INFO(get_logger(), "Example criteria: All joints must be given new command mode at the same time");
+    if (new_modes.size() != info_.joints.size())
+    {
+      return hardware_interface::return_type::ERROR;
+    }
+    // Example criteria: All joints must have the same command mode
+    if (!std::all_of(
+          new_modes.begin() + 1, new_modes.end(),
+          [&](integration_level_t mode) { return mode == new_modes[0]; }))
+    {
+      return hardware_interface::return_type::ERROR;
+    }
+
+    // Stop motion on all relevant joints that are stopping
+RCLCPP_INFO(get_logger(), "Stop motion on all relevant joints that are stopping");
+    for (std::string key : stop_interfaces)
+    {
+      for (std::size_t i = 0; i < info_.joints.size(); i++)
+      {
+        if (key.find(info_.joints[i].name) != std::string::npos)
+        {
+          set_command(
+            info_.joints[i].name + "/" + hardware_interface::HW_IF_POSITION,
+            get_state(info_.joints[i].name + "/" + hardware_interface::HW_IF_POSITION));
+          //set_command(info_.joints[i].name + "/" + hardware_interface::HW_IF_VELOCITY, 0.0);
+          set_command(info_.joints[i].name + "/" + hardware_interface::HW_IF_EFFORT, 0.0);
+          control_level_[i] = integration_level_t::UNDEFINED;  // Revert to undefined
+        }
+      }
+    }
+    // Set the new command modes
+    RCLCPP_INFO(get_logger(), "Set the new command modes");
+    for (std::size_t i = 0; i < info_.joints.size(); i++)
+    {
+      if (control_level_[i] != integration_level_t::UNDEFINED)
+      {
+        // Something else is using the joint! Abort!
+        return hardware_interface::return_type::ERROR;
+      }
+      control_level_[i] = new_modes[i];
+      switch(new_modes[0]){
+        case integration_level_t::POSITION:
+          canbus_activate_positionctrl(i);
+          break;
+        case integration_level_t::EFFORT:
+          canbus_activate_effortctrl(i);
+          break;
+        default:
+          RCLCPP_ERROR(get_logger(), "I am not prepared for this type of hardware interface: %i", new_modes[0]);
+          return hardware_interface::return_type::ERROR;
+      }
+      
+      
+    }
+    RCLCPP_INFO(get_logger(), "OK");
+    return hardware_interface::return_type::OK;
+  }
+
+
+
+
+
   hardware_interface::CallbackReturn PadmanSystemPositionOnlyHardware::on_activate(
       const rclcpp_lifecycle::State & /*previous_state*/)
   {
     // BEGIN: This part here is for exemplary purposes - Please do not copy to your production code
     RCLCPP_INFO(get_logger(), "Activating ...please wait...");
+
+            // Set some default values
+    for (std::size_t i = 0; i < info_.joints.size(); i++)
+    {
+      control_level_[i] = integration_level_t::UNDEFINED;
+    }
 
     canbus_init();
 
@@ -379,6 +479,8 @@ namespace padman_hw
       RCLCPP_INFO(get_logger(), "%.1f seconds left...", hw_start_sec_ - i);
     }
     // END: This part here is for exemplary purposes - Please do not copy to your production code
+
+
 
     // command and state should be equal when starting
     for (const auto &[name, descr] : joint_state_interfaces_)
@@ -458,6 +560,10 @@ namespace padman_hw
 
     RCLCPP_INFO(get_logger(), "Successfully activated!");
 
+
+
+    RCLCPP_INFO(get_logger(), "System successfully activated! %u", control_level_[0]);
+
     return hardware_interface::CallbackReturn::SUCCESS;
   }
 
@@ -482,7 +588,7 @@ namespace padman_hw
   hardware_interface::return_type PadmanSystemPositionOnlyHardware::read(
       const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
   {
-    RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "READ()");
+    //RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "READ()");
     // what we're doing here is certainly not the fastest way to obtain joint states, but it's a simple and
     // controllable way: when read() is called we send a request for positions on canbus and wait for the answers.
     // until we received all we stay in this function.
@@ -523,7 +629,7 @@ namespace padman_hw
       ss << std::fixed << std::setprecision(2) << std::endl
          << "\t" << get_state(name) << " for joint '" << name << "'";
     }
-    RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "%s", ss.str().c_str());
+    //RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "%s", ss.str().c_str());
     // // END: This part here is for exemplary purposes - Please do not copy to your production code
 
     return hardware_interface::return_type::OK;
@@ -606,6 +712,33 @@ namespace padman_hw
     return hardware_interface::return_type::OK;
   }
 
+    hardware_interface::return_type PadmanSystemPositionOnlyHardware::canbus_activate_effortctrl(int i_joint)
+  {
+    RCLCPP_INFO(get_logger(), "Activating Effort Control on CANBUS");
+    // PYTHON
+    //   data = [np.uint8(CMD_IDS.CTRL_POSITION)]#[0x00, 0x00]
+    // message = can.Message(arbitration_id=MSG_IDS_REL.CMD+(self.id+1)*self.id_range, is_extended_id=False, data=data)
+    int can_id = (i_joint + 1) * ID_RANGE + MSG_IDS_REL::CMD;
+    drivers::socketcan::FrameType type = drivers::socketcan::FrameType::DATA; // also possible: FrameType::REMOTE;FrameType::ERROR;
+    drivers::socketcan::CanId send_id(can_id, 0, type, drivers::socketcan::StandardFrame);
+    size_t dlc = 1;
+    uint8_t data[1] = {CMD_IDS::CMD_CTRL_TORQUE};
+    // RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "SENDING");
+    try
+    {
+      can_sender_->send(data, dlc, send_id, can_timeout_ns_);
+    }
+    catch (const std::exception &ex)
+    {
+      RCLCPP_WARN_THROTTLE(
+          this->get_logger(), *this->get_clock(), 1000,
+          "Error sending CAN message: %s - %s",
+          can_interface_.c_str(), ex.what());
+      return hardware_interface::return_type::ERROR;
+    }
+    return hardware_interface::return_type::OK;
+  }
+
   hardware_interface::return_type PadmanSystemPositionOnlyHardware::write(
       const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
   {
@@ -621,12 +754,25 @@ namespace padman_hw
     // }
     // RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "%s", ss.str().c_str());
     // // END: This part here is for exemplary purposes - Please do not copy to your production code
-    RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "WRITE()");
+    //RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "WRITE()");
     for (int i_joint = 0; i_joint < 3; i_joint++)
     {
-      std::string name = "joint" + std::to_string(i_joint + 1) + "/position";
-      float target = get_command(name);
-      canbus_send_targetposition(i_joint, target);
+      switch(control_level_[i_joint]){
+        case POSITION:{
+          std::string name_command_position = "joint" + std::to_string(i_joint + 1) + "/" + hardware_interface::HW_IF_POSITION;
+          float target_position = get_command(name_command_position);
+          canbus_send_targetposition(i_joint, target_position);
+          break;}
+        case EFFORT:{
+          std::string name_command_effort = "joint" + std::to_string(i_joint + 1) + "/" + hardware_interface::HW_IF_EFFORT;
+          float target_effort = get_command(name_command_effort);
+          canbus_send_targeteffort(i_joint, target_effort);
+          break;}
+        default:
+          RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "I am not sending a target for this kind of hardware interface: %i", control_level_[i_joint]);
+
+      }
+
     }
 
     return hardware_interface::return_type::OK;
@@ -650,7 +796,7 @@ namespace padman_hw
     // data = reinterpret_cast<uint8_t*>(&target);
     std::memcpy(data, reinterpret_cast<uint8_t *>(&target), sizeof(data));
 
-    RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "SENDING");
+    //RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "SENDING");
     try
     {
       can_sender_->send(data, dlc, send_id, can_timeout_ns_);
@@ -663,7 +809,42 @@ namespace padman_hw
           can_interface_.c_str(), ex.what());
       return hardware_interface::return_type::ERROR;
     }
-    RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "SENT");
+    //RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "SENT");
+    return hardware_interface::return_type::OK;
+  }
+
+  hardware_interface::return_type PadmanSystemPositionOnlyHardware::canbus_send_targeteffort(int i_joint, float target)
+  {
+    // PYTHON
+    // self.target_data = [0x00, 0x00, 0x00, 0x00]
+    // self.target_msg = can.Message(arbitration_id=self.joints[0].id_range+MSG_IDS_REL.TARGET_POSITION, is_extended_id=False, data=self.target_data)
+
+    // # Start periodic CAN sender
+    // self.sender = PeriodicCANSender(bus, ids = [self.joints[i].id_range*(i+1)++MSG_IDS_REL.TARGET_POSITION for i in range(self.n_joints)], datas = [self.target_data]*self.n_joints, interval=0.01)  # 20 Hz
+    RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "CREATING MSG");
+    int can_id = (i_joint + 1) * ID_RANGE + MSG_IDS_REL::TARGET_TORQUE;
+    drivers::socketcan::FrameType type = drivers::socketcan::FrameType::DATA; // also possible: FrameType::REMOTE;FrameType::ERROR;
+    drivers::socketcan::CanId send_id(can_id, 0, type, drivers::socketcan::StandardFrame);
+    size_t dlc = 4;
+    uint8_t data[4];
+
+    // data = reinterpret_cast<uint8_t*>(&target);
+    std::memcpy(data, reinterpret_cast<uint8_t *>(&target), sizeof(data));
+
+    //RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "SENDING");
+    try
+    {
+      can_sender_->send(data, dlc, send_id, can_timeout_ns_);
+    }
+    catch (const std::exception &ex)
+    {
+      RCLCPP_WARN_THROTTLE(
+          this->get_logger(), *this->get_clock(), 1000,
+          "Error sending CAN message: %s - %s",
+          can_interface_.c_str(), ex.what());
+      return hardware_interface::return_type::ERROR;
+    }
+    //RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "SENT");
     return hardware_interface::return_type::OK;
   }
 
@@ -741,7 +922,7 @@ namespace padman_hw
         break;
 
       case MSG_IDS_REL::STATE:
-        // RCLCPP_INFO(get_logger(), "RECEIVED STATE MSG");
+        RCLCPP_INFO(get_logger(), "RECEIVED STATE MSG. States being: %i %i %i",joint_state[0],joint_state[1],joint_state[2]);
 
         joint_state[i_joint] = padman_hw::STATES(data_buffer);
       }
