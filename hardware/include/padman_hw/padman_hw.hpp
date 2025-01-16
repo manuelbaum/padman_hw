@@ -95,6 +95,10 @@ public:
   hardware_interface::return_type write(
     const rclcpp::Time & time, const rclcpp::Duration & period) override;
 
+  hardware_interface::return_type prepare_command_mode_switch(
+    const std::vector<std::string> & start_interfaces,
+    const std::vector<std::string> & stop_interfaces) override;
+
   void can_receive();
 
 protected:
@@ -105,7 +109,8 @@ protected:
   hardware_interface::CallbackReturn canbus_init_jointlimits(int id);
   hardware_interface::return_type canbus_activate_positionctrl(int i_joint);
   hardware_interface::return_type canbus_send_targetposition(int i_joint, float target);
-
+  hardware_interface::return_type canbus_activate_effortctrl(int i_joint);
+  hardware_interface::return_type canbus_send_targeteffort(int i_joint, float target);
 private:
   
   // Parameters for the RRBot simulation
@@ -125,6 +130,20 @@ private:
 
   MatrixTimePoint msg_timestamps; // first dimension joint, second dimension message type
   std::vector<STATES> joint_state;
+
+
+  // Enum defining at which control level we are
+  // Dumb way of maintaining the command_interface type per joint.
+  enum integration_level_t : std::uint8_t
+  {
+    UNDEFINED = 0,
+    POSITION = 1,
+    VELOCITY = 2,
+    EFFORT = 3
+  };
+
+  // Active control mode for each actuator
+  std::vector<integration_level_t> control_level_;
 };
 
 }  // namespace ros2_control_demo_example_1
