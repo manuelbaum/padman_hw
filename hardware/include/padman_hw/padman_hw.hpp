@@ -100,6 +100,7 @@ public:
     const std::vector<std::string> & stop_interfaces) override;
 
   void can_receive();
+  void stop();
 
 protected:
   hardware_interface::CallbackReturn canbus_init();
@@ -111,6 +112,8 @@ protected:
   hardware_interface::return_type canbus_send_targetposition(int i_joint, float target);
   hardware_interface::return_type canbus_activate_effortctrl(int i_joint);
   hardware_interface::return_type canbus_send_targeteffort(int i_joint, float target);
+
+
 private:
   
   // Parameters for the RRBot simulation

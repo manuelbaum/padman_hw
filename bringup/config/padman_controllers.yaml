@@ -15,10 +15,14 @@ forward_position_controller:
       - joint3
     interface_name: position
 
-effort_controller:
+padman_controller:
   ros__parameters:
-    type: forward_command_controller/ForwardCommandController
+    type: padman_controller/PadmanController
     joints:
+      - joint1
+      - joint2
+      - joint3
+    state_joints:
       - joint1
       - joint2
       - joint3

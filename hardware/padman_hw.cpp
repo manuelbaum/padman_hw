@@ -115,6 +115,8 @@ namespace padman_hw
       }
     }
 
+    rclcpp::on_shutdown(std::bind(&PadmanSystemPositionOnlyHardware::stop, this));
+
     return hardware_interface::CallbackReturn::SUCCESS;
   }
 
@@ -571,19 +573,32 @@ RCLCPP_INFO(get_logger(), "Stop motion on all relevant joints that are stopping"
       const rclcpp_lifecycle::State & /*previous_state*/)
   {
     // BEGIN: This part here is for exemplary purposes - Please do not copy to your production code
-    RCLCPP_INFO(get_logger(), "Deactivating ...please wait...");
+    RCLCPP_INFO(get_logger(), "Deactivating ...please wait... (Activating torque control and setting zero torque)");
 
-    for (int i = 0; i < hw_stop_sec_; i++)
-    {
-      rclcpp::sleep_for(std::chrono::seconds(1));
-      RCLCPP_INFO(get_logger(), "%.1f seconds left...", hw_stop_sec_ - i);
-    }
+    stop();
+
+    rclcpp::sleep_for(std::chrono::seconds(1));
+    // for (int i = 0; i < hw_stop_sec_; i++)
+    // {
+    //   rclcpp::sleep_for(std::chrono::seconds(1));
+    //   RCLCPP_INFO(get_logger(), "%.1f seconds left...", hw_stop_sec_ - i);
+    // }
 
     RCLCPP_INFO(get_logger(), "Successfully deactivated!");
     // END: This part here is for exemplary purposes - Please do not copy to your production code
 
     return hardware_interface::CallbackReturn::SUCCESS;
   }
+
+  void PadmanSystemPositionOnlyHardware::stop(){
+      for(int i=0; i<3; i++){
+        canbus_activate_effortctrl(i);
+      }
+      rclcpp::sleep_for(std::chrono::milliseconds(10));
+      for(int i=0; i<3; i++){
+        canbus_send_targeteffort(i, 0); // make sure we dont command torque after shutdown
+      }
+    }
 
   hardware_interface::return_type PadmanSystemPositionOnlyHardware::read(
       const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
@@ -786,7 +801,7 @@ RCLCPP_INFO(get_logger(), "Stop motion on all relevant joints that are stopping"
 
     // # Start periodic CAN sender
     // self.sender = PeriodicCANSender(bus, ids = [self.joints[i].id_range*(i+1)++MSG_IDS_REL.TARGET_POSITION for i in range(self.n_joints)], datas = [self.target_data]*self.n_joints, interval=0.01)  # 20 Hz
-    RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "CREATING MSG");
+    //RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "CREATING MSG");
     int can_id = (i_joint + 1) * ID_RANGE + MSG_IDS_REL::TARGET_POSITION;
     drivers::socketcan::FrameType type = drivers::socketcan::FrameType::DATA; // also possible: FrameType::REMOTE;FrameType::ERROR;
     drivers::socketcan::CanId send_id(can_id, 0, type, drivers::socketcan::StandardFrame);
@@ -821,7 +836,7 @@ RCLCPP_INFO(get_logger(), "Stop motion on all relevant joints that are stopping"
 
     // # Start periodic CAN sender
     // self.sender = PeriodicCANSender(bus, ids = [self.joints[i].id_range*(i+1)++MSG_IDS_REL.TARGET_POSITION for i in range(self.n_joints)], datas = [self.target_data]*self.n_joints, interval=0.01)  # 20 Hz
-    RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "CREATING MSG");
+    //RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "CREATING MSG");
     int can_id = (i_joint + 1) * ID_RANGE + MSG_IDS_REL::TARGET_TORQUE;
     drivers::socketcan::FrameType type = drivers::socketcan::FrameType::DATA; // also possible: FrameType::REMOTE;FrameType::ERROR;
     drivers::socketcan::CanId send_id(can_id, 0, type, drivers::socketcan::StandardFrame);
@@ -922,7 +937,7 @@ RCLCPP_INFO(get_logger(), "Stop motion on all relevant joints that are stopping"
         break;
 
       case MSG_IDS_REL::STATE:
-        RCLCPP_INFO(get_logger(), "RECEIVED STATE MSG. States being: %i %i %i",joint_state[0],joint_state[1],joint_state[2]);
+        //RCLCPP_INFO(get_logger(), "RECEIVED STATE MSG. States being: %i %i %i",joint_state[0],joint_state[1],joint_state[2]);
 
         joint_state[i_joint] = padman_hw::STATES(data_buffer);
       }
