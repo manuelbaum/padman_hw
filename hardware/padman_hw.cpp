@@ -98,10 +98,10 @@ namespace padman_hw
         return hardware_interface::CallbackReturn::ERROR;
       }
 
-      if (joint.state_interfaces.size() != 1)
+      if (joint.state_interfaces.size() != 2)
       {
         RCLCPP_FATAL(
-            get_logger(), "Joint '%s' has %zu state interface. 1 expected.", joint.name.c_str(),
+            get_logger(), "Joint '%s' has %zu state interface. 2 expected.", joint.name.c_str(),
             joint.state_interfaces.size());
         return hardware_interface::CallbackReturn::ERROR;
       }
@@ -163,7 +163,7 @@ namespace padman_hw
 
     can_receiver_thread_ = std::make_unique<std::thread>(&PadmanSystemPositionOnlyHardware::can_receive, this);
 
-    RCLCPP_INFO(get_logger(), "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+    RCLCPP_INFO(get_logger(), "Canbus initialized.");
 
     // RCLCPP_INFO(get_logger(), "Initializing CAN bus");
     // const char *can_interface = "can0";
@@ -484,16 +484,18 @@ RCLCPP_INFO(get_logger(), "Stop motion on all relevant joints that are stopping"
 
 
 
-    // command and state should be equal when starting
-    for (const auto &[name, descr] : joint_state_interfaces_)
-    {
-      set_command(name, get_state(name));
-    }
+    // // command and state should be equal when starting
+    // for (const auto &[name, descr] : joint_state_interfaces_)
+    // {
+    //   set_command(name, get_state(name));
+    // }
 
     rclcpp::sleep_for(std::chrono::seconds(1));
     canbus_reset_joints();
     rclcpp::sleep_for(std::chrono::seconds(1));
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
+
+    RCLCPP_INFO(get_logger(), "Requesting and waiting jointstate...");
     request_and_wait_jointstate();
 
     // see if the joints have been initialized before, and if yes, then skip finding joint limits
@@ -505,7 +507,7 @@ RCLCPP_INFO(get_logger(), "Stop motion on all relevant joints that are stopping"
 
     if (is_need_initialization)
     {
-
+      RCLCPP_INFO(get_logger(), "initializing...");
       canbus_init_joint_foc(0);
       std::this_thread::sleep_for(std::chrono::milliseconds(10));
       canbus_init_joint_foc(1);
@@ -611,11 +613,13 @@ RCLCPP_INFO(get_logger(), "Stop motion on all relevant joints that are stopping"
 
     // broadcast request for joint positions (currently joint i sends its position when it received the position of joint i-1 -> we trigger
     // the cascade by sending pseudo position for non-existant joint 0)
-    int can_id = MSG_IDS_REL::STATE_POSITION;
-    drivers::socketcan::FrameType type = drivers::socketcan::FrameType::DATA; // also possible: FrameType::REMOTE;FrameType::ERROR;
-    drivers::socketcan::CanId send_id(can_id, 0, type, drivers::socketcan::StandardFrame);
+
+    {
+    drivers::socketcan::CanId send_id(MSG_IDS_REL::STATE_POSITION, 0, drivers::socketcan::FrameType::DATA, drivers::socketcan::StandardFrame);
     size_t dlc = 1;
     uint8_t data[1] = {0};
+
+    std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
 
     try
     {
@@ -629,21 +633,65 @@ RCLCPP_INFO(get_logger(), "Stop motion on all relevant joints that are stopping"
           can_interface_.c_str(), ex.what());
       return hardware_interface::return_type::ERROR;
     }
+    //RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "Waiting for position reading");
+    int i_cmd = MSG_IDS_REL::STATE_POSITION;
+    while(rclcpp::ok() && !(msg_timestamps(0, i_cmd)>now 
+                          &&msg_timestamps(1, i_cmd)>now
+                          &&msg_timestamps(2, i_cmd)>now)){
+      rclcpp::sleep_for(std::chrono::milliseconds(1));
+                          }
+    }
+    //RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "Received position reading");
+
+
+    // broadcast request for joint velocities (currently joint i sends its velocity when it received the velocity of joint i-1 -> we trigger
+    // the cascade by sending pseudo velocity for non-existant joint 0)
+    {
+    drivers::socketcan::CanId send_id(MSG_IDS_REL::STATE_VELOCITY, 0, drivers::socketcan::FrameType::DATA, drivers::socketcan::StandardFrame);
+    
+      size_t dlc = 1;
+      uint8_t data[1] = {0};
+
+      std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
+
+      try
+      {
+        can_sender_->send(data, dlc, send_id, can_timeout_ns_);
+      }
+      catch (const std::exception &ex)
+      {
+        RCLCPP_WARN_THROTTLE(
+            this->get_logger(), *this->get_clock(), 1000,
+            "Error sending CAN message: %s - %s",
+            can_interface_.c_str(), ex.what());
+        return hardware_interface::return_type::ERROR;
+      }
+
+      //RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "Waiting for velocity reading");
+      int i_cmd = MSG_IDS_REL::STATE_VELOCITY;
+      while(rclcpp::ok() && !(msg_timestamps(0, i_cmd)>now 
+                            &&msg_timestamps(1, i_cmd)>now
+                            &&msg_timestamps(2, i_cmd)>now)){
+        rclcpp::sleep_for(std::chrono::milliseconds(1));
+                            }
+      //RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "Received velocity reading");
+    }
+
 
     // wait until we got all the positions
 
-    // // BEGIN: This part here is for exemplary purposes - Please do not copy to your production code
-    std::stringstream ss;
-    ss << "Reading states:";
+    // // // BEGIN: This part here is for exemplary purposes - Please do not copy to your production code
+    // std::stringstream ss;
+    // ss << "Reading states:";
 
-    for (const auto &[name, descr] : joint_state_interfaces_)
-    {
-      // Simulate RRBot's movement
-      auto new_value = get_state(name) + (get_command(name) - get_state(name)) / hw_slowdown_;
-      set_state(name, new_value);
-      ss << std::fixed << std::setprecision(2) << std::endl
-         << "\t" << get_state(name) << " for joint '" << name << "'";
-    }
+    // for (const auto &[name, descr] : joint_state_interfaces_)
+    // {
+    //   // Simulate RRBot's movement
+    //   auto new_value = get_state(name) + (get_command(name) - get_state(name)) / hw_slowdown_;
+    //   set_state(name, new_value);
+    //   ss << std::fixed << std::setprecision(2) << std::endl
+    //      << "\t" << get_state(name) << " for joint '" << name << "'";
+    // }
     //RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "%s", ss.str().c_str());
     // // END: This part here is for exemplary purposes - Please do not copy to your production code
 
@@ -652,6 +700,7 @@ RCLCPP_INFO(get_logger(), "Stop motion on all relevant joints that are stopping"
 
   hardware_interface::return_type PadmanSystemPositionOnlyHardware::request_and_wait_jointstate()
   {
+    RCLCPP_INFO(get_logger(), "Requesting and waiting jointstate...");
     for (int i_joint = 0; i_joint < 3; i_joint++)
     {
       RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "LOOPING %d", i_joint);
@@ -904,35 +953,48 @@ RCLCPP_INFO(get_logger(), "Stop motion on all relevant joints that are stopping"
       switch (i_cmd)
       {
       case MSG_IDS_REL::STATE_POSITION:
-        if (i_joint >= 0)
+        if (i_joint >= 0) // could potentially be -1 for a pseudo joint
         {
-          std::string name = "joint" + std::to_string(i_joint + 1) + "/position";
-          float new_value;
+          
+          float new_position;
 
           // Copy the bit pattern of `int` to `float`
-          std::memcpy(&new_value, &data_buffer, sizeof(new_value));
+          std::memcpy(&new_position, &data_buffer, sizeof(new_position));
 
-          if (new_value != new_value)
+          if (new_position != new_position)
           {
             RCLCPP_INFO(get_logger(), "====== NAN!!!!");
             std::stringstream ss;
-            ss << "Reading states:";
-            ss << i_joint << ": " << new_value<<" "<<data_buffer<<std::endl;
-
+            ss << "Reading Positions:";
+            ss << i_joint << ": " << new_position<<" "<<data_buffer<<std::endl;
 
             RCLCPP_INFO(get_logger(), "%s", ss.str().c_str());
           }
 
-          // std::stringstream ss;
-          // ss << "Reading states:";
-          // ss << std::fixed << std::setprecision(2) << std::endl
-          //       << "\t" << new_value << " for joint '" << name << "'";
+          set_state("joint" + std::to_string(i_joint + 1) + "/position", (double)new_position);
+        }
+        break;
 
-          // RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "%s", ss.str().c_str());
+      case MSG_IDS_REL::STATE_VELOCITY:
+        if (i_joint >= 0) // could potentially be -1 for a pseudo joint
+        {
+          
+          float new_velocity;
 
-          // RCLCPP_INFO(get_logger(), (std::string("TRYING TO SET: \t")+name+std::string(" to: ")+std::string(std::to_string((double)new_value))).c_str());
-          set_state(name, (double)new_value);
-          // RCLCPP_INFO(get_logger(), (std::string("Successfully SET it:\t")+name+std::string(" to: ")+std::string(std::to_string((double)new_value))).c_str());
+          // Copy the bit pattern of `int` to `float`
+          std::memcpy(&new_velocity, &data_buffer, sizeof(new_velocity));
+
+          if (new_velocity != new_velocity)
+          {
+            RCLCPP_INFO(get_logger(), "====== NAN!!!!");
+            std::stringstream ss;
+            ss << "Reading Positions:";
+            ss << i_joint << ": " << new_velocity<<" "<<data_buffer<<std::endl;
+
+            RCLCPP_INFO(get_logger(), "%s", ss.str().c_str());
+          }
+
+          set_state("joint" + std::to_string(i_joint + 1) + "/velocity", (double)new_velocity);
         }
         break;
 
@@ -947,7 +1009,9 @@ RCLCPP_INFO(get_logger(), "Stop motion on all relevant joints that are stopping"
       { // we ignore messages we sent ourselves and just listen in the joint specific ranges
         // RCLCPP_INFO(get_logger(), (std::string("TRYING TO SET msg_timestamps(")+std::to_string(i_joint)+std::string(", ")+std::to_string(i_cmd)+std::string(")")).c_str());
         std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
+        //RCLCPP_INFO(get_logger(), (std::string("Pre insert map ")+std::to_string(i_joint)+std::string(" ")+std::to_string(i_cmd)).c_str());
         msg_timestamps(i_joint, i_cmd) = now;
+        //RCLCPP_INFO(get_logger(), "Post insert map");
       }
 
       if (can_use_bus_time_)

@@ -21,6 +21,7 @@
           <param name="max">0.1</param>
         </command_interface>
         <state_interface name="position"/>
+        <state_interface name="velocity"/>
       </joint>
       <joint name="${prefix}joint2">
         <command_interface name="position">
@@ -32,6 +33,7 @@
           <param name="max">0.1</param>
         </command_interface>
         <state_interface name="position"/>
+        <state_interface name="velocity"/>
       </joint>
         <joint name="${prefix}joint3">
         <command_interface name="position">
@@ -43,6 +45,7 @@
           <param name="max">0.1</param>
         </command_interface>
         <state_interface name="position"/>
+        <state_interface name="velocity"/>
       </joint>
     </ros2_control>
 
