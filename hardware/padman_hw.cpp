@@ -554,6 +554,9 @@ RCLCPP_INFO(get_logger(), "Stop motion on all relevant joints that are stopping"
       RCLCPP_INFO(get_logger(), "Skipping initialization!");
     }
 
+    canbus_send_targetposition(0, 0.0);
+    canbus_send_targetposition(1, 0.0);
+    canbus_send_targetposition(2, 3.141/2.0);
     for (int i = 0; i < 3; i++)
     {
 

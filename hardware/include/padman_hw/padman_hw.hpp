@@ -52,7 +52,8 @@ enum CMD_IDS{
     FIND_JOINTLIMITS=3,
     CMD_CTRL_TORQUE=4,
     CMD_CTRL_POSITION=5,
-    REBOOT=6
+    REBOOT=6,
+    SET_KD=7
 };
 
 enum STATES{
