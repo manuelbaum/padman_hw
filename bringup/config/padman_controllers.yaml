@@ -10,22 +10,43 @@ forward_position_controller:
   ros__parameters:
     type: forward_command_controller/ForwardCommandController
     joints:
-      - joint1
-      - joint2
-      - joint3
+      - joint1_l
+      - joint2_l
+      - joint3_l
+      - joint1_r
+      - joint2_r
+      - joint3_r
     interface_name: position
+
+forward_effort_controller:
+  ros__parameters:
+    type: forward_command_controller/ForwardCommandController
+    joints:
+      - joint1_l
+      - joint2_l
+      - joint3_l
+      - joint1_r
+      - joint2_r
+      - joint3_r
+    interface_name: effort
 
 padman_controller:
   ros__parameters:
     type: padman_controller/PadmanController
     joints:
-      - joint1
-      - joint2
-      - joint3
+      - joint1_l
+      - joint2_l
+      - joint3_l
+      - joint1_r
+      - joint2_r
+      - joint3_r
     state_joints:
-      - joint1
-      - joint2
-      - joint3
+      - joint1_l
+      - joint2_l
+      - joint3_l
+      - joint1_r
+      - joint2_r
+      - joint3_r
     interface_name: effort
 
 

@@ -94,7 +94,9 @@ def generate_launch_description():
     robot_controller_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["padman_controller", "--param-file", robot_controllers],
+        arguments=["forward_effort_controller", "--param-file", robot_controllers],
+        # arguments=["padman_controller", "--param-file", robot_controllers],
+        
     )
 
     # Delay rviz start after `joint_state_broadcaster`

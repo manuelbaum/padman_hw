@@ -128,7 +128,7 @@
   <child link="ee1"/>
 </joint>
 
-<joint name="joint2" type="revolute">
+<joint name="joint2_l" type="revolute">
   <origin xyz="0.0 0.088937 -0.043887" rpy="0 0 0"/>
   <parent link="link01"/>
   <child link="link11"/>
@@ -146,7 +146,7 @@
   </actuator>
 </transmission>
 
-<joint name="joint1" type="revolute">
+<joint name="joint1_l" type="revolute">
   <origin xyz="-0.05375 0.036 0.0" rpy="0 0 0"/>
   <parent link="base_link"/>
   <child link="link01"/>
@@ -164,7 +164,7 @@
   </actuator>
 </transmission>
 
-<joint name="joint3" type="revolute">
+<joint name="joint3_l" type="revolute">
   <origin xyz="0.002293 0.099974 -0.037727" rpy="0 0 0"/>
   <parent link="link11"/>
   <child link="link22"/>

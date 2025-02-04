@@ -100,6 +100,8 @@ public:
     const std::vector<std::string> & start_interfaces,
     const std::vector<std::string> & stop_interfaces) override;
 
+  std::string joint_name_from_id(int i_joint);
+
   void can_receive();
   void stop();
 

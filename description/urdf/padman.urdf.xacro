@@ -5,6 +5,7 @@
 
   <!-- Import RRBot macro -->
   <xacro:include filename="$(find padman_hw)/urdf/padman_description.urdf.xacro" />
+  <xacro:include filename="$(find padman_hw)/urdf/padman_description_right.urdf.xacro" />
 
   <!-- Import Rviz colors -->
   <!--<xacro:include filename="$(find padman_hw)/padman/urdf/padman.materials.xacro" />-->
@@ -18,6 +19,10 @@
   <xacro:padman parent="world" prefix="$(arg prefix)">
     <origin xyz="0 0 0" rpy="0 0 0" />
   </xacro:padman>
+
+  <xacro:padman_right parent="base_link" prefix="$(arg prefix)">
+    <origin xyz="0.255 0 0" rpy="0 0 0" />
+  </xacro:padman_right>
 
   <xacro:padman_ros2_control
     name="Padman" prefix="$(arg prefix)" />
