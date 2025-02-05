@@ -126,7 +126,7 @@
     <parent link="link22"/>
     <child link="ee1"/>
   </joint>
-  <joint name="joint2" type="revolute">
+  <joint name="joint2_l" type="revolute">
     <origin rpy="0 0 0" xyz="0.0 0.088937 -0.043887"/>
     <parent link="link01"/>
     <child link="link11"/>
@@ -143,7 +143,7 @@
       <mechanicalReduction>1</mechanicalReduction>
     </actuator>
   </transmission>
-  <joint name="joint1" type="revolute">
+  <joint name="joint1_l" type="revolute">
     <origin rpy="0 0 0" xyz="-0.05375 0.036 0.0"/>
     <parent link="base_link"/>
     <child link="link01"/>
@@ -160,7 +160,7 @@
       <mechanicalReduction>1</mechanicalReduction>
     </actuator>
   </transmission>
-  <joint name="joint3" type="revolute">
+  <joint name="joint3_l" type="revolute">
     <origin rpy="0 0 0" xyz="0.002293 0.099974 -0.037727"/>
     <parent link="link11"/>
     <child link="link22"/>
@@ -177,6 +177,172 @@
       <mechanicalReduction>1</mechanicalReduction>
     </actuator>
   </transmission>
+  <joint name="base_joint_right" type="fixed">
+    <origin rpy="0 0 0" xyz="0.165 0 0"/>
+    <parent link="base_link"/>
+    <child link="base_linkMirror"/>
+  </joint>
+  <link name="base_linkMirror">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.019701865393417787 0.014594904935575278 2.8934188281540232e-05"/>
+      <mass value="0.13178098360559276"/>
+      <inertia ixx="4.787606446432066e-05" ixy="-2.645567939358464e-05" ixz="7.016390270453513e-08" iyy="0.0001444924538761808" iyz="5.351316807470616e-08" izz="0.0001320895098259923"/>
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="file:///home/manuelbaum/ws_control/install/padman_hw/share/padman_hw/urdf/meshes/base_linkMirror.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="silver"/>
+      <material/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="file:///home/manuelbaum/ws_control/install/padman_hw/share/padman_hw/urdf/meshes/base_linkMirror.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+  </link>
+  <link name="link0Mirror1">
+    <inertial>
+      <origin rpy="0 0 0" xyz="-6.312709079109302e-05 0.04256997206013418 -0.017691828868565584"/>
+      <mass value="0.4311790263187446"/>
+      <inertia ixx="0.0003749971626902564" ixy="7.457801075479165e-08" ixz="3.70565061153438e-07" iyy="0.00019440975860486056" iyz="5.534815314142672e-05" izz="0.0003308969666292287"/>
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="-0.05375 -0.036 -0.0"/>
+      <geometry>
+        <mesh filename="file:///home/manuelbaum/ws_control/install/padman_hw/share/padman_hw/urdf/meshes/link0Mirror1.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="silver"/>
+      <material/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="-0.05375 -0.036 -0.0"/>
+      <geometry>
+        <mesh filename="file:///home/manuelbaum/ws_control/install/padman_hw/share/padman_hw/urdf/meshes/link0Mirror1.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+  </link>
+  <link name="link1Mirror1">
+    <inertial>
+      <origin rpy="0 0 0" xyz="-0.0012541291157318196 0.08016024395860367 -0.02121945021900131"/>
+      <mass value="0.10567997531810189"/>
+      <inertia ixx="0.00019254087217471672" ixy="4.987175372331591e-06" ixz="-1.494354940325337e-06" iyy="3.642804609956061e-05" iyz="3.2358619491903214e-05" izz="0.00020483238099001325"/>
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="-0.05375 -0.124937 0.043887"/>
+      <geometry>
+        <mesh filename="file:///home/manuelbaum/ws_control/install/padman_hw/share/padman_hw/urdf/meshes/link1Mirror1.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="silver"/>
+      <material/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="-0.05375 -0.124937 0.043887"/>
+      <geometry>
+        <mesh filename="file:///home/manuelbaum/ws_control/install/padman_hw/share/padman_hw/urdf/meshes/link1Mirror1.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+  </link>
+  <link name="link2Mirror2">
+    <inertial>
+      <origin rpy="0 0 0" xyz="-0.008402041055745532 0.02869107330371176 -0.0025682423626749717"/>
+      <mass value="0.003691660255753207"/>
+      <inertia ixx="2.2986267383965026e-06" ixy="6.376445055931963e-07" ixz="2.1157477741508437e-09" iyy="3.0790963249513676e-07" iyz="-7.224911525847326e-09" izz="2.5900285300856974e-06"/>
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="-0.051457 -0.224911 0.081614"/>
+      <geometry>
+        <mesh filename="file:///home/manuelbaum/ws_control/install/padman_hw/share/padman_hw/urdf/meshes/link2Mirror2.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="silver"/>
+      <material/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="-0.051457 -0.224911 0.081614"/>
+      <geometry>
+        <mesh filename="file:///home/manuelbaum/ws_control/install/padman_hw/share/padman_hw/urdf/meshes/link2Mirror2.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+  </link>
+  <link name="ee_r">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.068058 -0.24335 -0.066126"/>
+      <mass value="0.0"/>
+      <inertia ixx="0.0" ixy="0.0" ixz="0.0" iyy="0.0" iyz="0.0" izz="0.0"/>
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0.068058 -0.24335 -0.066126"/>
+      <geometry>
+        <mesh filename="file:///home/manuelbaum/ws_control/install/padman_hw/share/padman_hw/urdf/meshes/ee1.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="silver"/>
+      <material/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0.068058 -0.24335 -0.066126"/>
+      <geometry>
+        <mesh filename="file:///home/manuelbaum/ws_control/install/padman_hw/share/padman_hw/urdf/meshes/ee1.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+  </link>
+  <joint name="ee_rigid_r" type="fixed">
+    <origin rpy="0 0 0" xyz="-0.0219 0.0821 0.0"/>
+    <parent link="link2Mirror2"/>
+    <child link="ee_r"/>
+  </joint>
+  <joint name="joint1_r" type="revolute">
+    <origin rpy="0 0 0" xyz="0.05375 0.036 0.0"/>
+    <parent link="base_linkMirror"/>
+    <child link="link0Mirror1"/>
+    <axis xyz="0.0 1.0 0.0"/>
+    <limit effort="100" lower="-2.094395" upper="1.047198" velocity="100"/>
+  </joint>
+  <transmission name="Revolute_12_tran">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="Revolute_12">
+      <hardwareInterface>PositionJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="Revolute_12_actr">
+      <hardwareInterface>PositionJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+  <joint name="joint2_r" type="revolute">
+    <origin rpy="0 0 0" xyz="0.0 0.088937 -0.043887"/>
+    <parent link="link0Mirror1"/>
+    <child link="link1Mirror1"/>
+    <axis xyz="0.0 0.0 -1.0"/>
+    <limit effort="100" lower="-2.094395" upper="1.047198" velocity="100"/>
+  </joint>
+  <transmission name="Revolute_13_tran">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="Revolute_13">
+      <hardwareInterface>PositionJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="Revolute_13_actr">
+      <hardwareInterface>PositionJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+  <joint name="joint3_r" type="revolute">
+    <origin rpy="0 0 0" xyz="-0.002293 0.099974 -0.037727"/>
+    <parent link="link1Mirror1"/>
+    <child link="link2Mirror2"/>
+    <axis xyz="0.0 0.0 -1.0"/>
+    <limit effort="100" lower="-2.094395" upper="1.047198" velocity="100"/>
+  </joint>
+  <transmission name="Revolute_14_tran">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="Revolute_14">
+      <hardwareInterface>PositionJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="Revolute_14_actr">
+      <hardwareInterface>PositionJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
   <ros2_control name="Padman" type="system">
     <hardware>
       <plugin>padman_hw/PadmanSystemPositionOnlyHardware</plugin>
@@ -184,7 +350,7 @@
       <param name="example_param_hw_stop_duration_sec">3.0</param>
       <param name="example_param_hw_slowdown">100</param>
     </hardware>
-    <joint name="joint1">
+    <joint name="joint1_l">
       <command_interface name="position">
         <param name="min">-1</param>
         <param name="max">1</param>
@@ -196,7 +362,7 @@
       <state_interface name="position"/>
       <state_interface name="velocity"/>
     </joint>
-    <joint name="joint2">
+    <joint name="joint2_l">
       <command_interface name="position">
         <param name="min">-1</param>
         <param name="max">1</param>
@@ -208,7 +374,43 @@
       <state_interface name="position"/>
       <state_interface name="velocity"/>
     </joint>
-    <joint name="joint3">
+    <joint name="joint3_l">
+      <command_interface name="position">
+        <param name="min">-1</param>
+        <param name="max">1</param>
+      </command_interface>
+      <command_interface name="effort">
+        <param name="min">-0.1</param>
+        <param name="max">0.1</param>
+      </command_interface>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+    <joint name="joint1_r">
+      <command_interface name="position">
+        <param name="min">-1</param>
+        <param name="max">1</param>
+      </command_interface>
+      <command_interface name="effort">
+        <param name="min">-0.1</param>
+        <param name="max">0.1</param>
+      </command_interface>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+    <joint name="joint2_r">
+      <command_interface name="position">
+        <param name="min">-1</param>
+        <param name="max">1</param>
+      </command_interface>
+      <command_interface name="effort">
+        <param name="min">-0.1</param>
+        <param name="max">0.1</param>
+      </command_interface>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+    <joint name="joint3_r">
       <command_interface name="position">
         <param name="min">-1</param>
         <param name="max">1</param>

@@ -21,7 +21,7 @@
   </xacro:padman>
 
   <xacro:padman_right parent="base_link" prefix="$(arg prefix)">
-    <origin xyz="0.255 0 0" rpy="0 0 0" />
+    <origin xyz="0.165 0 0" rpy="0 0 0" />
   </xacro:padman_right>
 
   <xacro:padman_ros2_control
