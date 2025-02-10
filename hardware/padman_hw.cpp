@@ -159,7 +159,7 @@ namespace padman_hw
       return hardware_interface::CallbackReturn::FAILURE;
     }
 
-    RCLCPP_DEBUG(this->get_logger(), "Receiver successfully configured.");
+    RCLCPP_INFO(this->get_logger(), "Receiver successfully configured.");
 
     can_receiver_thread_ = std::make_unique<std::thread>(&PadmanSystemPositionOnlyHardware::can_receive, this);
 
@@ -1025,6 +1025,13 @@ RCLCPP_INFO(get_logger(), "Stop motion on all relevant joints that are stopping"
             can_interface_.c_str(), ex.what());
         continue;
       }
+      catch (const std::runtime_error &e){
+        RCLCPP_WARN_THROTTLE(
+            this->get_logger(), *this->get_clock(), 1000,
+            "runtime error in can_receiver->receive(): %s ",
+            e.what());
+        continue;
+      }
 
       // switch over message types:
       int i_joint = receive_id.identifier() / ID_RANGE - 1;
@@ -1104,15 +1111,7 @@ RCLCPP_INFO(get_logger(), "Stop motion on all relevant joints that are stopping"
         }
       }
 
-      if (can_use_bus_time_)
-      {
-        // frame_msg.header.stamp =
-        //   rclcpp::Time(static_cast<int64_t>(receive_id.get_bus_time() * 1000U));
-      }
-      else
-      {
-        // frame_msg.header.stamp = this->now();
-      }
+
 
       // frame_msg.id = receive_id.identifier();
       // frame_msg.is_rtr = (receive_id.frame_type() == FrameType::REMOTE);
