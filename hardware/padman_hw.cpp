@@ -51,7 +51,7 @@ namespace padman_hw
     can_interface_ = "can0";   // this->declare_parameter("interface", "can0");
     can_use_bus_time_ = false; // this->declare_parameter<bool>("use_bus_time", false);
     can_enable_fd_ = false;    // this->declare_parameter<bool>("enable_can_fd", false);
-    double timeout_sec = 0.01; // this->declare_parameter("timeout_sec", 0.01);
+    double timeout_sec = 0.001; // this->declare_parameter("timeout_sec", 0.01);
     can_timeout_ns_ = std::chrono::duration_cast<std::chrono::nanoseconds>(
         std::chrono::duration<double>(timeout_sec));
   }
@@ -65,6 +65,8 @@ namespace padman_hw
     {
       return hardware_interface::CallbackReturn::ERROR;
     }
+
+    monitor_ = std::shared_ptr<RealtimeMonitor>(new RealtimeMonitor(1000.0, "padman_hw::read"));
 
     msg_timestamps = MatrixTimePoint(info_.joints.size(), MSG_IDS_REL::STATE_EFFORT + 1); // magic numbers to be removed: n_joints x n_messages per joint. set all to -1 as uninitialized
     joint_state = std::vector<STATES>(info_.joints.size(), STATES::UNINITIALIZED);
@@ -501,7 +503,7 @@ RCLCPP_INFO(get_logger(), "Stop motion on all relevant joints that are stopping"
 
     // see if the joints have been initialized before, and if yes, then skip finding joint limits
     bool is_need_initialization = false;
-    for (int i_joint = 0; i_joint < info_.joints.size(); i_joint++)
+    for (long unsigned int i_joint = 0; i_joint < info_.joints.size(); i_joint++)
     {
       is_need_initialization = is_need_initialization || joint_state[i_joint] < STATES::INITIALIZED_JOINT;
     }
@@ -510,7 +512,7 @@ RCLCPP_INFO(get_logger(), "Stop motion on all relevant joints that are stopping"
     {
       RCLCPP_INFO(get_logger(), "Requesting Initialize FOC.");
 
-      for (int i_joint=0; i_joint < info_.joints.size(); i_joint++){
+      for (long unsigned int i_joint=0; i_joint < info_.joints.size(); i_joint++){
         canbus_init_joint_foc(i_joint);
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
@@ -553,7 +555,7 @@ RCLCPP_INFO(get_logger(), "Stop motion on all relevant joints that are stopping"
       // }
 
       // initialize both arms at the same time
-      for (int i_joint = 0; i_joint < info_.joints.size()/2; i_joint++)
+      for (long unsigned int i_joint = 0; i_joint < info_.joints.size()/2; i_joint++)
       {
         RCLCPP_INFO(get_logger(), (std::string("Requesting Initialize Joint limit for joint ")+std::to_string(i_joint)).c_str());
 
@@ -626,7 +628,7 @@ RCLCPP_INFO(get_logger(), "Stop motion on all relevant joints that are stopping"
 
       RCLCPP_INFO(get_logger(), "Activating Position CTRL for joint %d", i);
       canbus_activate_positionctrl(i);
-      rclcpp::sleep_for(std::chrono::seconds(1));
+      rclcpp::sleep_for(std::chrono::milliseconds(500));
     }
 
     RCLCPP_INFO(get_logger(), "Successfully activated!");
@@ -672,6 +674,9 @@ RCLCPP_INFO(get_logger(), "Stop motion on all relevant joints that are stopping"
   hardware_interface::return_type PadmanSystemPositionOnlyHardware::read(
       const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
   {
+
+    monitor_->update();
+
     //RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "READ()");
     // what we're doing here is certainly not the fastest way to obtain joint states, but it's a simple and
     // controllable way: when read() is called we send a request for positions on canbus and wait for the answers.
@@ -708,7 +713,7 @@ RCLCPP_INFO(get_logger(), "Stop motion on all relevant joints that are stopping"
                           &&msg_timestamps(3, i_cmd)>now
                           &&msg_timestamps(4, i_cmd)>now
                           &&msg_timestamps(5, i_cmd)>now)){
-      rclcpp::sleep_for(std::chrono::milliseconds(1));
+      rclcpp::sleep_for(std::chrono::microseconds(1));
                           }
     }
     //RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "Received position reading");
@@ -745,7 +750,7 @@ RCLCPP_INFO(get_logger(), "Stop motion on all relevant joints that are stopping"
                             &&msg_timestamps(3, i_cmd)>now
                             &&msg_timestamps(4, i_cmd)>now
                             &&msg_timestamps(5, i_cmd)>now)){
-        rclcpp::sleep_for(std::chrono::milliseconds(1));
+        rclcpp::sleep_for(std::chrono::microseconds(1));
                             }
       //RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "Received velocity reading");
     }
@@ -774,7 +779,7 @@ RCLCPP_INFO(get_logger(), "Stop motion on all relevant joints that are stopping"
   hardware_interface::return_type PadmanSystemPositionOnlyHardware::request_and_wait_jointstate()
   {
     RCLCPP_INFO(get_logger(), "Requesting and waiting jointstate...");
-    for (int i_joint = 0; i_joint < info_.joints.size(); i_joint++)
+    for (long unsigned int i_joint = 0; i_joint < info_.joints.size(); i_joint++)
     {
       RCLCPP_INFO(get_logger(), "LOOPING %d", i_joint);
       std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
@@ -899,7 +904,7 @@ RCLCPP_INFO(get_logger(), "Stop motion on all relevant joints that are stopping"
       //RCLCPP_INFO(get_logger(), (std::string("Writing for ")+joint_name+std::string(" in state ")+std::to_string(control_level_[i_joint])).c_str());
       switch(control_level_[i_joint]){
         case POSITION:{
-          RCLCPP_INFO(get_logger(), "__________________________________ACTUALLY POSITION!??!?!?");
+
           std::string name_command_position = joint_name + "/" + hardware_interface::HW_IF_POSITION;
           float target_position = get_command(name_command_position);
           canbus_send_targetposition(i_joint, target_position);
@@ -1107,7 +1112,7 @@ RCLCPP_INFO(get_logger(), "Stop motion on all relevant joints that are stopping"
               this->get_logger(), *this->get_clock(), 1000,
               "entering msg_timestamp: %s - %s",
               can_interface_.c_str(), ex.what());
-          RCLCPP_INFO(get_logger(), "%i %i %i %i", i_joint, i_cmd, msg_timestamps.cols(), msg_timestamps.rows());
+          RCLCPP_INFO(get_logger(), "%ld %ld %ld %ld", i_joint, i_cmd, msg_timestamps.cols(), msg_timestamps.rows());
         }
       }
 

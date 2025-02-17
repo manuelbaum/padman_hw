@@ -34,6 +34,8 @@
 #include "ros2_socketcan/socket_can_receiver.hpp"
 #include "ros2_socketcan/socket_can_sender.hpp"
 
+#include "padman_hw/realtimemonitor.hpp"
+
 namespace padman_hw
 {
 
@@ -150,6 +152,9 @@ private:
 
   // Active control mode for each actuator
   std::vector<integration_level_t> control_level_;
+
+  std::shared_ptr<RealtimeMonitor> monitor_;
+  
 };
 
 }  // namespace ros2_control_demo_example_1
