@@ -30,10 +30,20 @@ public:
         }
     }
 
+    void update_duration(){
+        auto now = steady_clock::now();
+        double dt = duration<double>(now - last_time_).count();
+        durations_.push_back(dt);
+        if (durations_.size() > max_samples_) {
+            durations_.erase(durations_.begin());  // Remove oldest entry
+        }
+    }
+
     void print_stats() {
         if (periods_.empty()) return;
 
         double sum = 0.0;
+        
         double min_dt = std::numeric_limits<double>::max();
         double max_dt = std::numeric_limits<double>::lowest();
 
@@ -42,11 +52,23 @@ public:
             if (dt < min_dt) min_dt = dt;
             if (dt > max_dt) max_dt = dt;
         }
+
+        std::string str_duration;
+        if(!durations_.empty()){
+            double sum_durations = 0.0;
+            for (double dt : durations_) {
+                sum_durations += dt;
+            }
+            double mean_duration = sum_durations / (double)durations_.size();
+            str_duration = std::string("[Mean Duration: ")+std::to_string(mean_duration)+std::string("]");
+        }
         // std::cout<<" ==================================================================== periods.size "<<periods_.size()<<std::endl;
         // RCLCPP_INFO(rclcpp::get_logger("RealtimeMonitor"), "periods.size %i", periods_.size());
 
         double mean_dt = sum / (double)periods_.size();
         double mean_freq = 1.0 / mean_dt;
+
+        
 
         // Compute jitter (standard deviation of period deviations)
         double jitter_sum = 0.0;
@@ -56,16 +78,18 @@ public:
         double jitter = std::sqrt(jitter_sum / (double)periods_.size());
 
         RCLCPP_INFO(rclcpp::get_logger("RealtimeMonitor"),
-                    "Name: %s Freq: %.2f Hz (target: %.2f Hz), Jitter: %.3f ms, Min: %.3f ms, Max: %.3f ms",
+                    "Name: %s Freq: %.2f Hz (target: %.2f Hz), Jitter: %.3f ms, Min: %.3f ms, Max: %.3f ms, %s",
                     name_.c_str(),
                     mean_freq, 1.0 / expected_period_,
-                    jitter * 1000.0, min_dt * 1000.0, max_dt * 1000.0);
+                    jitter * 1000.0, min_dt * 1000.0, max_dt * 1000.0,
+                    str_duration.c_str());
     }
 
 private:
     double expected_period_;
     double expected_frequency_;
-    std::vector<double> periods_;
+    std::vector<double> periods_; // we use this one to compute frequency of function calls
+    std::vector<double> durations_; // we use this one to compute duration of function calls
     const size_t max_samples_ = 1000;
     time_point<steady_clock> last_time_;
     int counter_ = 0;

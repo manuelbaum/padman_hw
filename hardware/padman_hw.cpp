@@ -66,7 +66,8 @@ namespace padman_hw
       return hardware_interface::CallbackReturn::ERROR;
     }
 
-    monitor_ = std::shared_ptr<RealtimeMonitor>(new RealtimeMonitor(1000.0, "padman_hw::read"));
+    monitor_read_ = std::shared_ptr<RealtimeMonitor>(new RealtimeMonitor(1000.0, "padman_hw::read"));
+    monitor_write_ = std::shared_ptr<RealtimeMonitor>(new RealtimeMonitor(1000.0, "padman_hw::write"));
 
     msg_timestamps = MatrixTimePoint(info_.joints.size(), MSG_IDS_REL::STATE_EFFORT + 1); // magic numbers to be removed: n_joints x n_messages per joint. set all to -1 as uninitialized
     joint_state = std::vector<STATES>(info_.joints.size(), STATES::UNINITIALIZED);
@@ -675,7 +676,7 @@ RCLCPP_INFO(get_logger(), "Stop motion on all relevant joints that are stopping"
       const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
   {
 
-    monitor_->update();
+    monitor_read_->update();
 
     //RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "READ()");
     // what we're doing here is certainly not the fastest way to obtain joint states, but it's a simple and
@@ -772,6 +773,8 @@ RCLCPP_INFO(get_logger(), "Stop motion on all relevant joints that are stopping"
     // }
     //RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "%s", ss.str().c_str());
     // // END: This part here is for exemplary purposes - Please do not copy to your production code
+
+    monitor_read_->update_duration();
 
     return hardware_interface::return_type::OK;
   }
@@ -884,6 +887,7 @@ RCLCPP_INFO(get_logger(), "Stop motion on all relevant joints that are stopping"
   hardware_interface::return_type PadmanSystemPositionOnlyHardware::write(
       const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
   {
+    monitor_write_->update();
     // // BEGIN: This part here is for exemplary purposes - Please do not copy to your production code
     // std::stringstream ss;
     // ss << "Writing commands:";
@@ -920,6 +924,7 @@ RCLCPP_INFO(get_logger(), "Stop motion on all relevant joints that are stopping"
       }
 
     }
+    monitor_write_->update_duration();
 
     return hardware_interface::return_type::OK;
   }
@@ -1112,7 +1117,7 @@ RCLCPP_INFO(get_logger(), "Stop motion on all relevant joints that are stopping"
               this->get_logger(), *this->get_clock(), 1000,
               "entering msg_timestamp: %s - %s",
               can_interface_.c_str(), ex.what());
-          RCLCPP_INFO(get_logger(), "%ld %ld %ld %ld", i_joint, i_cmd, msg_timestamps.cols(), msg_timestamps.rows());
+          RCLCPP_INFO(get_logger(), "%d %d %ld %ld", i_joint, i_cmd, msg_timestamps.cols(), msg_timestamps.rows());
         }
       }
 

@@ -153,7 +153,8 @@ private:
   // Active control mode for each actuator
   std::vector<integration_level_t> control_level_;
 
-  std::shared_ptr<RealtimeMonitor> monitor_;
+  std::shared_ptr<RealtimeMonitor> monitor_read_;
+  std::shared_ptr<RealtimeMonitor> monitor_write_;
   
 };
 
