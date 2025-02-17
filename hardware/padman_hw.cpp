@@ -706,6 +706,9 @@ RCLCPP_INFO(get_logger(), "Stop motion on all relevant joints that are stopping"
           can_interface_.c_str(), ex.what());
       return hardware_interface::return_type::ERROR;
     }
+
+    // MONITOR [Mean Duration: 0.000006]
+    
     //RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "Waiting for position reading");
     int i_cmd = MSG_IDS_REL::STATE_POSITION;
     while(rclcpp::ok() && !(msg_timestamps(0, i_cmd)>now 
@@ -717,6 +720,9 @@ RCLCPP_INFO(get_logger(), "Stop motion on all relevant joints that are stopping"
       rclcpp::sleep_for(std::chrono::microseconds(1));
                           }
     }
+
+    monitor_read_->update_duration();
+
     //RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "Received position reading");
 
 
@@ -774,7 +780,7 @@ RCLCPP_INFO(get_logger(), "Stop motion on all relevant joints that are stopping"
     //RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "%s", ss.str().c_str());
     // // END: This part here is for exemplary purposes - Please do not copy to your production code
 
-    monitor_read_->update_duration();
+    // MONITOR: [Mean Duration: 0.004950]
 
     return hardware_interface::return_type::OK;
   }
@@ -887,7 +893,7 @@ RCLCPP_INFO(get_logger(), "Stop motion on all relevant joints that are stopping"
   hardware_interface::return_type PadmanSystemPositionOnlyHardware::write(
       const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
   {
-    monitor_write_->update();
+    //monitor_write_->update();
     // // BEGIN: This part here is for exemplary purposes - Please do not copy to your production code
     // std::stringstream ss;
     // ss << "Writing commands:";
@@ -924,7 +930,7 @@ RCLCPP_INFO(get_logger(), "Stop motion on all relevant joints that are stopping"
       }
 
     }
-    monitor_write_->update_duration();
+    //monitor_write_->update_duration();
 
     return hardware_interface::return_type::OK;
   }
